@@ -1,8 +1,10 @@
-import scrapy
 from datetime import datetime
+
 import mysql.connector
-from fundos_scraper.items import FundosScraperItem
+import scrapy
+
 import database_credentials
+from fundos_scraper.items import FundosScraperItem
 
 
 class MesesSpider(scrapy.Spider):

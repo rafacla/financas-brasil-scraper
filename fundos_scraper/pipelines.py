@@ -4,21 +4,19 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-# useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
-from scrapy.pipelines.files import FilesPipeline
 from scrapy.exceptions import DropItem
-import zipfile
+# useful for handling different item types with a single interface
+from scrapy.pipelines.files import FilesPipeline
 
 
 class FundosScraperPipeline(FilesPipeline):
- def file_path(self, request, response=None, info=None):
-  file_name: str = request.url.split("/")[-1]
-  return file_name
+    def file_path(self, request, response=None, info=None):
+        file_name: str = request.url.split("/")[-1]
+        return file_name
 
- def item_completed(self, results, item, info):
-  file_paths = [x['path'] for ok, x in results if ok]
-  if not file_paths:
-   raise DropItem("Item contains no files")
-  item['file_paths'] = file_paths
-  return item
+    def item_completed(self, results, item, info):
+        file_paths = [x['path'] for ok, x in results if ok]
+        if not file_paths:
+            raise DropItem("Item contains no files")
+        item['file_paths'] = file_paths
+        return item
