@@ -1,5 +1,5 @@
 # passwors and sensitive files
-database_credentials.py
+parameters.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

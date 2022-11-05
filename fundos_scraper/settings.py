@@ -6,6 +6,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import parameters
 
 BOT_NAME = 'fundos_scraper'
 
@@ -67,7 +68,7 @@ DOWNLOAD_DELAY = 3
 #}
 #ITEM_PIPELINES = {'scrapy.pipelines.files.FilesPipeline': 1}
 ITEM_PIPELINES = {'fundos_scraper.pipelines.FundosScraperPipeline': 1}
-FILES_STORE = '/home/bitnami/scrapy/downloads'
+FILES_STORE = parameters.local_storage[0]
 FILES_EXPIRES = 1
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

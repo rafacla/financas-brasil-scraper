@@ -1,0 +1,7 @@
+# Database String Connection
+host = 'localhost',
+user = 'username',
+password = 'passwords',
+database = 'investimentos',
+# Location for storing downloaded files
+local_storage = '/home/cvm',

@@ -3,7 +3,7 @@ from datetime import datetime
 import mysql.connector
 import scrapy
 
-import database_credentials
+import parameters
 from fundos_scraper.items import FundosScraperItem
 
 
@@ -13,10 +13,10 @@ class MesesSpider(scrapy.Spider):
 
     def __init__(self):
         self.conn = mysql.connector.connect(
-            host=database_credentials.host[0],
-            user=database_credentials.user[0],
-            password=database_credentials.password[0],
-            database=database_credentials.database[0]
+            host=parameters.host[0],
+            user=parameters.user[0],
+            password=parameters.password[0],
+            database=parameters.database[0]
         )
         # Create cursor, used to execute commands
         self.cur = self.conn.cursor()
