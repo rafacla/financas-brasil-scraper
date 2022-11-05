@@ -4,22 +4,23 @@ import mysql.connector
 from fundos_scraper.items import FundosScraperItem
 import database_credentials
 
+
 class MesesSpider(scrapy.Spider):
     name = "meses"
     start_urls = ['https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
 
     def __init__(self):
         self.conn = mysql.connector.connect(
-            host=database_credentials.host,
-            user=database_credentials.user,
-            password=database_credentials.password,
-            database=database_credentials.database
+            host=database_credentials.host[0],
+            user=database_credentials.user[0],
+            password=database_credentials.password[0],
+            database=database_credentials.database[0]
         )
         # Create cursor, used to execute commands
         self.cur = self.conn.cursor()
 
     def parse(self, response):
-        # Recupera links disponíveis ná pagina da CVM
+        # Recupera links disponíveis na pagina da CVM
         datas = response.xpath('//pre/text()').getall()
         datas[:] = [desc.strip() for desc in datas]
         datas[:] = [desc[:11] for desc in datas]
