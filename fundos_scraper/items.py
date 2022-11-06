@@ -8,6 +8,7 @@ import scrapy
 
 class FundosScraperItem(scrapy.Item):
     file_urls = scrapy.Field()
+    data_atualizacao = scrapy.Field()
     original_file_name = scrapy.Field()
     file_paths = scrapy.Field()
     files = scrapy.Field
