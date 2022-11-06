@@ -2,12 +2,12 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+import logging
 import os
 import zipfile
 
-import MySQLdb
+import mysql.connector
 import pandas as pd
-import sqlalchemy as sa
 from scrapy.exceptions import DropItem
 # useful for handling different item types with a single interface
 from scrapy.pipelines.files import FilesPipeline
@@ -38,17 +38,40 @@ class FundosScraperPipeline(FilesPipeline):
             'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
         )
 
-        object_columns = [c for c in df.columns[df.dtypes == 'object'].tolist()]
-        dtyp = {c: sa.types.VARCHAR(df[c].str.len().max()) for c in object_columns}
-        try:
-            df.to_sql(parameters.quotes_table_name, dtype=dtyp, con=engine, index=False,
-                      if_exists='append')  # Replace Table_name with your sql table name
-        except:
-            pass
+        conn = mysql.connector.connect(
+            host=parameters.host,
+            user=parameters.user,
+            password=parameters.password,
+            database=parameters.database
+        )
+        # Create cursor, used to execute commands
+        cursor = conn.cursor()
+        sql_insert = "REPLACE INTO `" + parameters.quotes_table_name + "`" + \
+                     "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_TOTAL`, `VL_QUOTA`, `CAPTC_DIA`, `RESG_DIA`, `NR_COTST`) " + \
+                     "VALUES "
+        logging.info("Starting upload to database of " + file_paths[0])
+        sql_insert_values = ""
+        for row in df.itertuples():
+            sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
+                row.VL_TOTAL) + "','" + str(row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "','" + str(
+                row.RESG_DIA) + "','" + str(row.NR_COTST) + "'),"
+            if len(sql_insert_values) > 102400 * 5:
+                sql_insert_values = sql_insert_values[:-1] + ';'
+                try:
+                    cursor.execute(sql_insert + sql_insert_values)
+                except:
+                    logging.error("Failed to upload: " + sql_insert + sql_insert_values)
+                conn.commit()
+                sql_insert_values = ''
+                logging.info("Uploading rows of " + file_paths[0] + "until " + str(row.Index))
+        if len(sql_insert_values) > 0:
+            sql_insert_values = sql_insert_values[:-1] + ';'
+            cursor.execute(sql_insert + sql_insert_values)
+            conn.commit()
         engine.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
                        "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
                            'data_atualizacao'] + "')")
-
+        logging.info("Finished upload to database of " + file_paths[0])
         engine.dispose()
         arquivo.close()
         zf.close()
