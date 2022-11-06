@@ -12,3 +12,12 @@ class FundosScraperItem(scrapy.Item):
     original_file_name = scrapy.Field()
     file_paths = scrapy.Field()
     files = scrapy.Field
+    pipeline = scrapy.Field()
+
+class FundosScraperDescItem(scrapy.Item):
+    file_urls = scrapy.Field()
+    data_atualizacao = scrapy.Field()
+    pipeline = scrapy.Field()
+    original_file_name = scrapy.Field()
+    file_paths = scrapy.Field()
+    files = scrapy.Field

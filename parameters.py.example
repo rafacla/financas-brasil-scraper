@@ -5,5 +5,7 @@ password = 'passwords'
 database = 'investimentos'
 scrapy_quotes_table_name = 'scrapy_fundos_cvm_cotas'
 quotes_table_name = 'fundos_cvm_cotas'
+scrapy_description_table_name = 'scrapy_fundos_cvm_descricao'
+description_table_name = 'fundos_cvm_descricao'
 # Location for storing downloaded files
 local_storage = '/home/cvm'

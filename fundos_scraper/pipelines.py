@@ -6,6 +6,7 @@ import logging
 import os
 import zipfile
 
+from pymysql.converters import escape_string
 import mysql.connector
 import pandas as pd
 from scrapy.exceptions import DropItem
@@ -26,53 +27,117 @@ class FundosScraperPipeline(FilesPipeline):
         if not file_paths:
             raise DropItem("Item contains no files")
         item['file_paths'] = file_paths
-        # let's get the absolute path from the file
-        absolute_path = os.path.join(self.store.basedir, file_paths[0])
-        zf = zipfile.ZipFile(absolute_path)
-        arquivo = zf.open(zf.filelist[0].filename)
-        df = pd.read_csv(arquivo, sep=';', engine='python')
-        df = df.drop(columns=['TP_FUNDO', 'VL_PATRIM_LIQ'])
-        df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
+        if item['pipeline'] == 'meses':
+            # let's get the absolute path from the file
+            absolute_path = os.path.join(self.store.basedir, file_paths[0])
+            zf = zipfile.ZipFile(absolute_path)
+            arquivo = zf.open(zf.filelist[0].filename)
+            df = pd.read_csv(arquivo, sep=';', engine='python')
+            df = df.drop(columns=['TP_FUNDO', 'VL_PATRIM_LIQ'])
+            df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
 
-        engine = create_engine(
-            'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
-        )
+            engine = create_engine(
+                'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
+            )
 
-        conn = mysql.connector.connect(
-            host=parameters.host,
-            user=parameters.user,
-            password=parameters.password,
-            database=parameters.database
-        )
-        # Create cursor, used to execute commands
-        cursor = conn.cursor()
-        sql_insert = "REPLACE INTO `" + parameters.quotes_table_name + "`" + \
-                     "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_TOTAL`, `VL_QUOTA`, `CAPTC_DIA`, `RESG_DIA`, `NR_COTST`) " + \
-                     "VALUES "
-        logging.info("Starting upload to database of " + file_paths[0])
-        sql_insert_values = ""
-        for row in df.itertuples():
-            sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
-                row.VL_TOTAL) + "','" + str(row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "','" + str(
-                row.RESG_DIA) + "','" + str(row.NR_COTST) + "'),"
-            if len(sql_insert_values) > 102400 * 5:
+            conn = mysql.connector.connect(
+                host=parameters.host,
+                user=parameters.user,
+                password=parameters.password,
+                database=parameters.database
+            )
+            # Create cursor, used to execute commands
+            cursor = conn.cursor()
+            sql_insert = "REPLACE INTO `" + parameters.quotes_table_name + "`" + \
+                         "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_TOTAL`, `VL_QUOTA`, `CAPTC_DIA`, `RESG_DIA`, `NR_COTST`) " + \
+                         "VALUES "
+            logging.info("Starting upload to database of " + file_paths[0])
+            sql_insert_values = ""
+            for row in df.itertuples():
+                sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
+                    row.VL_TOTAL) + "','" + str(row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "','" + str(
+                    row.RESG_DIA) + "','" + str(row.NR_COTST) + "'),"
+                if len(sql_insert_values) > 102400 * 5:
+                    sql_insert_values = sql_insert_values[:-1] + ';'
+                    try:
+                        cursor.execute(sql_insert + sql_insert_values)
+                    except:
+                        logging.error("Failed to upload: " + sql_insert + sql_insert_values)
+                    conn.commit()
+                    sql_insert_values = ''
+                    logging.info("Uploading rows of " + file_paths[0] + "until " + str(row.Index))
+            if len(sql_insert_values) > 0:
                 sql_insert_values = sql_insert_values[:-1] + ';'
-                try:
-                    cursor.execute(sql_insert + sql_insert_values)
-                except:
-                    logging.error("Failed to upload: " + sql_insert + sql_insert_values)
+                cursor.execute(sql_insert + sql_insert_values)
                 conn.commit()
-                sql_insert_values = ''
-                logging.info("Uploading rows of " + file_paths[0] + "until " + str(row.Index))
-        if len(sql_insert_values) > 0:
-            sql_insert_values = sql_insert_values[:-1] + ';'
-            cursor.execute(sql_insert + sql_insert_values)
-            conn.commit()
-        engine.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
-                       "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
-                           'data_atualizacao'] + "')")
-        logging.info("Finished upload to database of " + file_paths[0])
-        engine.dispose()
-        arquivo.close()
-        zf.close()
+            engine.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
+                           "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
+                               'data_atualizacao'] + "')")
+            logging.info("Finished upload to database of " + file_paths[0])
+            engine.dispose()
+            arquivo.close()
+            zf.close()
+        return item
+
+
+class FundosScraperPipelineLaminas(FilesPipeline):
+    def file_path(self, request, response=None, info=None):
+        file_name: str = request.url.split("/")[-1]
+        return file_name
+
+    def item_completed(self, results, item, info):
+        if item['pipeline'] == 'laminas':
+            file_paths = [x['path'] for ok, x in results if ok]
+            if not file_paths:
+                raise DropItem("Item contains no files")
+            item['file_paths'] = file_paths
+
+            # let's get the absolute path from the file
+            absolute_path = os.path.join(self.store.basedir, file_paths[0])
+            zf = zipfile.ZipFile(absolute_path)
+            arquivo = zf.open(zf.filelist[0].filename)
+            df = pd.read_csv(arquivo, sep=';', engine='python', encoding='latin1', quoting=3)
+            df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
+
+            engine = create_engine(
+                'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
+            )
+
+            conn = mysql.connector.connect(
+                host=parameters.host,
+                user=parameters.user,
+                password=parameters.password,
+                database=parameters.database
+            )
+            # Create cursor, used to execute commands
+            cursor = conn.cursor()
+            sql_insert = "REPLACE INTO `" + parameters.description_table_name + "`" + \
+                         "(`CNPJ_FUNDO`, `DT_COMPTC`, `DENOM_SOCIAL`, `NM_FANTASIA`)" + \
+                         " VALUES "
+            logging.info("Starting upload to database of " + file_paths[0])
+            sql_insert_values = ""
+            for row in df.itertuples():
+                sql_insert_values += " ('" + escape_string(row.CNPJ_FUNDO) + "','" \
+                                     + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + escape_string(str(
+                    row.DENOM_SOCIAL)) + "','" + escape_string(str(row.NM_FANTASIA)) + "'),"
+                if len(sql_insert_values) > 10240:
+                    sql_insert_values = sql_insert_values[:-1] + ';'
+                    try:
+                        cursor.execute(sql_insert + sql_insert_values)
+                    except:
+                        logging.error("Failed to upload: " + sql_insert + sql_insert_values)
+                    conn.commit()
+                    sql_insert_values = ''
+                    logging.info("Uploading rows of " + file_paths[0] + "until " + str(row.Index))
+            if len(sql_insert_values) > 0:
+                sql_insert_values = sql_insert_values[:-1] + ';'
+                cursor.execute(sql_insert + sql_insert_values)
+                conn.commit()
+            engine.execute("REPLACE INTO `" + parameters.scrapy_description_table_name +
+                           "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
+                               'data_atualizacao'] + "')")
+            logging.info("Finished upload to database of " + file_paths[0])
+            engine.dispose()
+            arquivo.close()
+            zf.close()
         return item

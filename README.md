@@ -4,3 +4,4 @@ pip install scrapy
 pip install pandas
 pip install sqlalchemy
 pip install mysql
+pip install pymysql

@@ -4,12 +4,12 @@ import mysql.connector
 import scrapy
 
 import parameters
-from fundos_scraper.items import FundosScraperItem
+from fundos_scraper.items import FundosScraperDescItem
 
 
 class MesesSpider(scrapy.Spider):
-    name = "meses"
-    start_urls = ['https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
+    name = "laminas"
+    start_urls = ['https://dados.cvm.gov.br/dados/FI/DOC/LAMINA/DADOS/']
 
     def __init__(self):
         self.conn = mysql.connector.connect(
@@ -30,7 +30,7 @@ class MesesSpider(scrapy.Spider):
         links = response.css('a::attr(href)').getall()
         del links[0:2]
         # Recupera no banco de dados últimos arquivos atualizados
-        self.cur.execute("select * from `"+parameters.scrapy_quotes_table_name+"`")
+        self.cur.execute("select * from `"+parameters.scrapy_description_table_name+"`")
         mysql_items = self.cur.fetchall()
         # Agora iremos comparar quais itens já estão atualizados
         i = 0
@@ -63,9 +63,9 @@ class MesesSpider(scrapy.Spider):
         for i, link in enumerate(links):
             if link[-3:] == 'zip':
                 file_url = response.urljoin(link)
-                item = FundosScraperItem()
+                item = FundosScraperDescItem()
                 data_atualizacao = datas[i].strftime('%Y-%m-%d')
                 item['data_atualizacao'] = data_atualizacao
-                item['pipeline'] = 'meses'
                 item['file_urls'] = [file_url]
+                item['pipeline'] = 'laminas'
                 yield item
