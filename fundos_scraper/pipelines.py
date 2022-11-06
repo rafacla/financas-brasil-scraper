@@ -42,7 +42,7 @@ class FundosScraperPipeline(FilesPipeline):
         dtyp = {c: sa.types.VARCHAR(df[c].str.len().max()) for c in object_columns}
         try:
             df.to_sql(parameters.quotes_table_name, dtype=dtyp, con=engine, index=False,
-                      if_exists='append', method='multi', chunksize=2000)  # Replace Table_name with your sql table name
+                      if_exists='append')  # Replace Table_name with your sql table name
         except:
             pass
         engine.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
