@@ -5,6 +5,7 @@
 import os
 import zipfile
 
+import MySQLdb
 import pandas as pd
 import sqlalchemy as sa
 from scrapy.exceptions import DropItem
@@ -33,9 +34,10 @@ class FundosScraperPipeline(FilesPipeline):
         df = df.drop(columns=['TP_FUNDO', 'VL_PATRIM_LIQ'])
         df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
 
-        engine = create_engine(
-            'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
-        )
+        #engine = create_engine(
+        #    'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
+        #)
+        engine = MySQLdb.connect(parameters.host, parameters.user, parameters.password, parameters.database)
         object_columns = [c for c in df.columns[df.dtypes == 'object'].tolist()]
         dtyp = {c: sa.types.VARCHAR(df[c].str.len().max()) for c in object_columns}
         try:
