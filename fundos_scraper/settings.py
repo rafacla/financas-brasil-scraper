@@ -68,7 +68,7 @@ DOWNLOAD_DELAY = 3
 #}
 #ITEM_PIPELINES = {'scrapy.pipelines.files.FilesPipeline': 1}
 ITEM_PIPELINES = {'fundos_scraper.pipelines.FundosScraperPipeline': 1}
-FILES_STORE = parameters.local_storage[0]
+FILES_STORE = parameters.local_storage
 FILES_EXPIRES = 1
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

@@ -13,10 +13,10 @@ class MesesSpider(scrapy.Spider):
 
     def __init__(self):
         self.conn = mysql.connector.connect(
-            host=parameters.host[0],
-            user=parameters.user[0],
-            password=parameters.password[0],
-            database=parameters.database[0]
+            host=parameters.host,
+            user=parameters.user,
+            password=parameters.password,
+            database=parameters.database
         )
         # Create cursor, used to execute commands
         self.cur = self.conn.cursor()
