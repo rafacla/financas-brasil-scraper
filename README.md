@@ -5,3 +5,5 @@ pip install pandas
 pip install sqlalchemy
 pip install mysql
 pip install pymysql
+pip install fastapi
+pip install uvicorn[standard]
