@@ -40,14 +40,20 @@ def find_all(db: Session = Depends(get_db)):
 def find_by_id(cnpj: str, db: Session = Depends(get_db)):
     cnpj = cnpj.replace('.', '').replace('-', '').replace('/', '')
     cnpj_like = ''
-    for letra in cnpj:
-        cnpj_like += letra + '_'
+    for i, letra in enumerate(cnpj):
+        if i == 2 or i == 5:
+            cnpj_like += '.'
+        elif i == 8:
+            cnpj_like += '/'
+        elif i == 12:
+            cnpj_like += '-'
+        cnpj_like += letra
     cnpj_like = cnpj_like + '%'
     fundo = DescricaoFundoRepository.find_by_cnpj(db, cnpj_like)
-
+    print(cnpj_like)
     if not fundo:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj
+            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj_like[:-1]
         )
     return DescricaoFundoResponse.from_orm(fundo)
 
@@ -78,14 +84,20 @@ def update(id: int, request: DescricaoFundoRequest, db: Session = Depends(get_db
 def cotas_by_cnpj(cnpj: str, data_de=None, data_ate=None, db: Session = Depends(get_db)):
     cnpj = cnpj.replace('.', '').replace('-', '').replace('/', '')
     cnpj_like = ''
-    for letra in cnpj:
-        cnpj_like += letra + '_'
+    for i, letra in enumerate(cnpj):
+        if i == 2 or i == 5:
+            cnpj_like += '.'
+        elif i == 8:
+            cnpj_like += '/'
+        elif i == 12:
+            cnpj_like += '-'
+        cnpj_like += letra
     cnpj_like = cnpj_like + '%'
     fundos = CotasFundoRepository.find_by_cnpj(db, cnpj_like, data_de, data_ate)
 
     if not fundos:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Cotas não encontradas, CNPJ: " + cnpj
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cotas não encontradas, CNPJ: " + cnpj_like[:-1]
         )
     # return CotasFundoResponse.from_orm(fundos)
     return [CotasFundoResponse.from_orm(fundo) for fundo in fundos]
