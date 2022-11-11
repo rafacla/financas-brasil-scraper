@@ -42,9 +42,9 @@ def find_by_id(cnpj: str, db: Session = Depends(get_db)):
     cnpj_like = ''
     for letra in cnpj:
         cnpj_like += letra + '_'
-    cnpj_like = '%' + cnpj_like + '%'
+    cnpj_like = cnpj_like + '%'
     fundo = DescricaoFundoRepository.find_by_cnpj(db, cnpj_like)
-    logger.debug(cnpj_like)
+
     if not fundo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj
@@ -80,7 +80,7 @@ def cotas_by_cnpj(cnpj: str, data_de=None, data_ate=None, db: Session = Depends(
     cnpj_like = ''
     for letra in cnpj:
         cnpj_like += letra + '_'
-    cnpj_like = '%' + cnpj_like + '%'
+    cnpj_like = cnpj_like + '%'
     fundos = CotasFundoRepository.find_by_cnpj(db, cnpj_like, data_de, data_ate)
 
     if not fundos:
