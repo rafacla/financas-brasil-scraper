@@ -13,7 +13,29 @@ class DescricaoFundoBase(BaseModel):
 class DescricaoFundoRequest(DescricaoFundoBase):
     ...
 
+
 class DescricaoFundoResponse(DescricaoFundoBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class CotasFundoBase(BaseModel):
+    CNPJ_FUNDO: str
+    DT_COMPTC: datetime.date
+    VL_TOTAL: float
+    VL_QUOTA: float
+    CAPTC_DIA: float
+    RESG_DIA: float
+    NR_COTST: int
+
+
+class CotasFundoRequest(CotasFundoBase):
+    ...
+
+
+class CotasFundoResponse(CotasFundoBase):
     id: int
 
     class Config:
