@@ -92,12 +92,12 @@ def cotas_by_cnpj(cnpj: str, data_de=None, data_ate=None, db: Session = Depends(
         elif i == 12:
             cnpj_like += '-'
         cnpj_like += letra
-    cnpj_like = cnpj_like + '%'
+
     fundos = CotasFundoRepository.find_by_cnpj(db, cnpj_like, data_de, data_ate)
 
     if not fundos:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Cotas não encontradas, CNPJ: " + cnpj_like[:-1]
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cotas não encontradas, CNPJ: " + cnpj_like
         )
     # return CotasFundoResponse.from_orm(fundos)
     return [CotasFundoResponse.from_orm(fundo) for fundo in fundos]

@@ -68,11 +68,11 @@ class CotasFundoRepository:
 
     def find_by_cnpj(db: Session, cnpj: str, data_de=None, data_ate=None) -> list[CotasFundo]:
         if data_de is not None and data_ate is not None:
-            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO.like(cnpj)).filter(
+            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO == cnpj).filter(
                 CotasFundo.DT_COMPTC >= data_de).filter(CotasFundo.DT_COMPTC <= data_ate).all()
         elif data_de is not None:
-            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO.like(cnpj)).filter(
+            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO == cnpj).filter(
                 CotasFundo.DT_COMPTC >= data_de).all()
         else:
-            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO.like(cnpj)).all()
+            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO == cnpj).all()
         return fundos
