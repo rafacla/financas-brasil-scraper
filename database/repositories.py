@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import functions, func
 
 from database.models import CotasFundo
 from database.models import DescricaoFundo
+from database.models import TaxaDI
 
 
 class DescricaoFundoRepository:
@@ -76,3 +78,51 @@ class CotasFundoRepository:
         else:
             fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO == cnpj).all()
         return fundos
+
+
+class TaxaDIRepository:
+    @staticmethod
+    def find_all(db: Session) -> list[TaxaDI]:
+        return db.query(TaxaDI).limit(30).all()
+
+    @staticmethod
+    def save(db: Session, taxaDI: TaxaDI) -> TaxaDI:
+        if taxaDI.id:
+            db.merge(taxaDI)
+        else:
+            db.add(taxaDI)
+        db.commit()
+        return taxaDI
+
+    @staticmethod
+    def find_by_id(db: Session, id: int) -> TaxaDI:
+        return db.query(TaxaDI).filter(TaxaDI.id == id).first()
+
+    @staticmethod
+    def exists_by_id(db: Session, id: int) -> bool:
+        return db.query(TaxaDI).filter(TaxaDI.id == id).first() is not None
+
+    @staticmethod
+    def delete_by_id(db: Session, id: int) -> None:
+        taxaDI = db.query(TaxaDI).filter(TaxaDI.id == id).first()
+        if taxaDI is not None:
+            db.delete(taxaDI)
+            db.commit()
+
+    def get_taxa_di(db: Session, date_since=None, date_until=None) -> TaxaDI:
+        query = db.query(TaxaDI.id,
+                         TaxaDI.dataDI,
+                         TaxaDI.taxaDIAnual,
+                         TaxaDI.taxaDIDiaria,
+                         func.exp(
+                             functions.sum(
+                                 func.log(TaxaDI.taxaDIDiaria)
+                             )
+                         ).label("taxaDIAcumulada"))
+        if date_since is not None and date_until is not None:
+            taxas = query.filter(TaxaDI.dataDI >= date_since).filter(TaxaDI.dataDI <= date_until).first()
+        elif date_since is not None:
+            taxas = query.filter(TaxaDI.dataDI >= date_since).first()
+        else:
+            taxas = query.first()
+        return taxas

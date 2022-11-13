@@ -27,3 +27,11 @@ class CotasFundo(Base):
     CAPTC_DIA: float = Column(Float, nullable=False)
     RESG_DIA: float = Column(Float, nullable=False)
     NR_COTST: int = Column(Integer, nullable=False)
+
+class TaxaDI(Base):
+    __tablename__ = parameters.taxa_di_table_name
+
+    id: int = Column(Integer, primary_key=True, index=True)
+    dataDI: datetime.date = Column(Date, unique=True, nullable=False)
+    taxaDIAnual: float = Column(Float, nullable=False)
+    taxaDIDiaria: float = Column(Float, nullable=False)
