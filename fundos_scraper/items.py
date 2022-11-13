@@ -21,3 +21,9 @@ class FundosScraperDescItem(scrapy.Item):
     original_file_name = scrapy.Field()
     file_paths = scrapy.Field()
     files = scrapy.Field
+
+class CetipDIItem(scrapy.Item):
+    taxaDIAnual = scrapy.Field()
+    dataTaxaDI = scrapy.Field()
+    taxaDIDiaria = scrapy.Field()
+
