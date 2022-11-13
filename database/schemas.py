@@ -40,3 +40,19 @@ class CotasFundoResponse(CotasFundoBase):
 
     class Config:
         orm_mode = True
+
+
+class TaxaDIBase(BaseModel):
+    dataDI: datetime.date
+    taxaDIAnual: float
+    taxaDIDiaria: float
+
+class TaxaDIRequest(TaxaDIBase):
+    ...
+
+
+class TaxaDIResponse(TaxaDIBase):
+    id: int
+    taxaDIAcumulada: float
+    class Config:
+        orm_mode = True

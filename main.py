@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 import uvicorn
 from database.database import engine, Base, get_db
 from database.models import DescricaoFundo
-from database.repositories import DescricaoFundoRepository
-from database.schemas import DescricaoFundoRequest, DescricaoFundoResponse
+from database.repositories import DescricaoFundoRepository, TaxaDIRepository
+from database.schemas import DescricaoFundoRequest, DescricaoFundoResponse, TaxaDIResponse
 from database.repositories import CotasFundoRepository
 from database.schemas import CotasFundoRequest, CotasFundoResponse
 
@@ -22,6 +22,17 @@ logger = logging.getLogger(__name__)  # the __name__ resolve to "main" since we 
 # This will get the root logger since no logger in the configuration has this name.
 
 app = FastAPI()
+
+
+@app.get("/taxaDI/{date_since}", response_model=TaxaDIResponse)
+@app.get("/taxaDI/{date_since}/{date_until}", response_model=TaxaDIResponse)
+def get_taxa_di(date_since: datetime.date, date_until=None, db: Session = Depends(get_db)):
+    taxa = TaxaDIRepository.get_taxa_di(db, date_since, date_until)
+    if not taxa:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Taxa não encontrada, verifique as datas limites"
+        )
+    return TaxaDIResponse.from_orm(taxa)
 
 
 @app.post("/fundos", response_model=DescricaoFundoResponse, status_code=status.HTTP_201_CREATED)
