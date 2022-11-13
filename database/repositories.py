@@ -111,7 +111,7 @@ class TaxaDIRepository:
 
     def get_taxa_di(db: Session, date_since=None, date_until=None) -> TaxaDI:
         query = db.query(TaxaDI.id,
-                         TaxaDI.dataDI,
+                         func.max(TaxaDI.dataDI).label("dataDI"),
                          TaxaDI.taxaDIAnual,
                          TaxaDI.taxaDIDiaria,
                          func.exp(
