@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 import uvicorn
 from database.database import engine, Base, get_db
 from database.models import DescricaoFundo
-from database.repositories import DescricaoFundoRepository, TaxaDIRepository
-from database.schemas import DescricaoFundoRequest, DescricaoFundoResponse, TaxaDIResponse
+from database.repositories import DescricaoFundoRepository, TaxaDIRepository, TesouroRepository
+from database.schemas import DescricaoFundoRequest, DescricaoFundoResponse, TaxaDIResponse, TesouroResponse
 from database.repositories import CotasFundoRepository
 from database.schemas import CotasFundoRequest, CotasFundoResponse
 
@@ -112,6 +112,25 @@ def cotas_by_cnpj(cnpj: str, data_de=None, data_ate=None, db: Session = Depends(
         )
     # return CotasFundoResponse.from_orm(fundos)
     return [CotasFundoResponse.from_orm(fundo) for fundo in fundos]
+
+
+@app.get("/tesouro/{titulo}/{vencimento}", response_model=list[TesouroResponse])
+@app.get("/tesouro/{titulo}/{vencimento}/{data_de}", response_model=list[TesouroResponse])
+@app.get("/tesouro/{titulo}/{vencimento}/{data_de}/{data_ate}", response_model=list[TesouroResponse])
+def tesouro(titulo: str, vencimento: str, data_de=None, data_ate=None, db: Session = Depends(get_db)):
+    fundos = TesouroRepository.get_titulo(db, titulo, vencimento, data_de, data_ate)
+
+    if not fundos:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Título não encontrado: " + titulo
+        )
+    # return CotasFundoResponse.from_orm(fundos)
+    return [TesouroResponse.from_orm(fundo) for fundo in fundos]
+
+
+@app.get("/tesouro/todos", response_model=list[TesouroResponse])
+def tesouros_disponiveis(db: Session = Depends(get_db)):
+    return TesouroRepository.get_titulos_disponiveis(db)
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ class CotasFundo(Base):
     RESG_DIA: float = Column(Float, nullable=False)
     NR_COTST: int = Column(Integer, nullable=False)
 
+
 class TaxaDI(Base):
     __tablename__ = parameters.taxa_di_table_name
 
@@ -35,3 +36,17 @@ class TaxaDI(Base):
     dataDI: datetime.date = Column(Date, nullable=False, unique=True)
     taxaDIAnual: float = Column(Float, nullable=False)
     taxaDIDiaria: float = Column(Float, nullable=False)
+
+
+class Tesouro(Base):
+    __tablename__ = parameters.tesouro_direto_table_name
+
+    id: int = Column(Integer, primary_key=True, index=True)
+    nome: str = Column(String(18), nullable=False)
+    vencimento: datetime.date = Column(Date, nullable=False)
+    data: datetime.date = Column(Date, nullable=False)
+    taxa_compra: float = Column(Float, nullable=False)
+    taxa_venda: float = Column(Float, nullable=False)
+    pu_compra: float = Column(Float, nullable=False)
+    pu_venda: float = Column(Float, nullable=False)
+    pu_base: float = Column(Float, nullable=False)

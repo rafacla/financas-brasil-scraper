@@ -157,7 +157,7 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
 
             # let's get the absolute path from the file
             absolute_path = os.path.join(self.store.basedir, file_paths[0])
-            df = pd.read_csv(absolute_path, sep=';', engine='python', encoding='latin1', quoting=3, decimal=",")
+            df = pd.read_csv(absolute_path, sep=';', engine='python', encoding='latin1', quoting=3, decimal=",", dayfirst=True)
             df.columns = [c.replace(' ', '_') for c in df.columns]
             df['Data_Vencimento'] = pd.to_datetime(df.Data_Vencimento)
             df['Data_Base'] = pd.to_datetime(df.Data_Base)

@@ -47,6 +47,7 @@ class TaxaDIBase(BaseModel):
     taxaDIAnual: float
     taxaDIDiaria: float
 
+
 class TaxaDIRequest(TaxaDIBase):
     ...
 
@@ -54,5 +55,28 @@ class TaxaDIRequest(TaxaDIBase):
 class TaxaDIResponse(TaxaDIBase):
     id: int
     taxaDIAcumulada: float
+
+    class Config:
+        orm_mode = True
+
+
+class TesouroBase(BaseModel):
+    nome: str
+    vencimento: datetime.date
+    data: datetime.date
+    taxa_compra: float
+    taxa_venda: float
+    pu_compra: float
+    pu_venda: float
+    pu_base: float
+
+
+class TesouroRequest(TesouroBase):
+    ...
+
+
+class TesouroResponse(TesouroBase):
+    id: int
+
     class Config:
         orm_mode = True

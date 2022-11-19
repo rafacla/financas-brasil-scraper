@@ -1,7 +1,9 @@
+import datetime
+
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import functions, func
 
-from database.models import CotasFundo
+from database.models import CotasFundo, Tesouro
 from database.models import DescricaoFundo
 from database.models import TaxaDI
 
@@ -126,3 +128,48 @@ class TaxaDIRepository:
         else:
             taxas = query.first()
         return taxas
+
+
+class TesouroRepository:
+    @staticmethod
+    def find_all(db: Session) -> list[Tesouro]:
+        return db.query(Tesouro).limit(30).all()
+
+    @staticmethod
+    def save(db: Session, tesouro: Tesouro) -> Tesouro:
+        if tesouro.id:
+            db.merge(tesouro)
+        else:
+            db.add(tesouro)
+        db.commit()
+        return tesouro
+
+    @staticmethod
+    def find_by_id(db: Session, id: int) -> Tesouro:
+        return db.query(Tesouro).filter(Tesouro.id == id).first()
+
+    @staticmethod
+    def exists_by_id(db: Session, id: int) -> bool:
+        return db.query(Tesouro).filter(Tesouro.id == id).first() is not None
+
+    @staticmethod
+    def delete_by_id(db: Session, id: int) -> None:
+        tesouro = db.query(Tesouro).filter(Tesouro.id == id).first()
+        if tesouro is not None:
+            db.delete(tesouro)
+            db.commit()
+
+    def get_titulo(db: Session, nome: str, vencimento: str, date_since=None, date_until=None) -> [Tesouro]:
+        query = db.query(Tesouro).filter(Tesouro.nome == nome).filter(Tesouro.vencimento == vencimento)
+        if date_since is not None and date_until is not None:
+            taxas = query.filter(Tesouro.data >= date_since).filter(Tesouro.data <= date_until).all()
+        elif date_since is not None:
+            taxas = query.filter(Tesouro.data >= date_since).all()
+        else:
+            taxas = query.all()
+        return taxas
+
+    def get_titulos_disponiveis(db: Session) -> [Tesouro]:
+        subquery = db.query(Tesouro.data).group_by(Tesouro.nome, Tesouro.vencimento).subquery()
+        query = db.query(Tesouro).filter(Tesouro.data.in_(subquery)).order_by(Tesouro.nome).order_by(Tesouro.vencimento)
+        return query.all()
