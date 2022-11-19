@@ -1,5 +1,6 @@
 import datetime
 
+import sqlalchemy
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import functions, func
 
@@ -170,6 +171,7 @@ class TesouroRepository:
         return taxas
 
     def get_titulos_disponiveis(db: Session) -> [Tesouro]:
-        subquery = db.query(Tesouro.data).group_by(Tesouro.nome, Tesouro.vencimento).subquery()
-        query = db.query(Tesouro).filter(Tesouro.data.in_(subquery)).order_by(Tesouro.nome).order_by(Tesouro.vencimento)
+        subquery = db.query(Tesouro.nome, Tesouro.vencimento, func.max(Tesouro.data).label('ultima_atualizacao')).group_by(Tesouro.nome, Tesouro.vencimento).subquery()
+        query = db.query(Tesouro).join(subquery, sqlalchemy.and_(Tesouro.nome == subquery.c.nome, Tesouro.vencimento == subquery.c.vencimento, Tesouro.data == subquery.c.ultima_atualizacao))
+        query.order_by(Tesouro.nome, Tesouro.vencimento)
         return query.all()
