@@ -159,8 +159,8 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
             absolute_path = os.path.join(self.store.basedir, file_paths[0])
             df = pd.read_csv(absolute_path, sep=';', engine='python', encoding='latin1', quoting=3, decimal=",", dayfirst=True)
             df.columns = [c.replace(' ', '_') for c in df.columns]
-            df['Data_Vencimento'] = pd.to_datetime(df.Data_Vencimento)
-            df['Data_Base'] = pd.to_datetime(df.Data_Base)
+            df['Data_Vencimento'] = pd.to_datetime(df.Data_Vencimento, dayfirst=True)
+            df['Data_Base'] = pd.to_datetime(df.Data_Base, dayfirst=True)
 
             engine = create_engine(
                 'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
