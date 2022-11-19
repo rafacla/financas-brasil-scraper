@@ -14,6 +14,7 @@ class FundosScraperItem(scrapy.Item):
     files = scrapy.Field
     pipeline = scrapy.Field()
 
+
 class FundosScraperDescItem(scrapy.Item):
     file_urls = scrapy.Field()
     data_atualizacao = scrapy.Field()
@@ -22,8 +23,16 @@ class FundosScraperDescItem(scrapy.Item):
     file_paths = scrapy.Field()
     files = scrapy.Field
 
+
 class CetipDIItem(scrapy.Item):
     taxaDIAnual = scrapy.Field()
     dataTaxaDI = scrapy.Field()
     taxaDIDiaria = scrapy.Field()
 
+
+class TesouroDiretoItem(scrapy.Item):
+    file_urls = scrapy.Field()
+    original_file_name = scrapy.Field()
+    file_paths = scrapy.Field()
+    files = scrapy.Field
+    pipeline = scrapy.Field()

@@ -70,6 +70,7 @@ DOWNLOAD_DELAY = 3
 ITEM_PIPELINES = {
     'fundos_scraper.pipelines.FundosScraperPipeline': 1,
     'fundos_scraper.pipelines.FundosScraperPipelineLaminas': 2,
+    'fundos_scraper.pipelines.FundosScraperPipelineTesouroDireto': 3,
 }
 FILES_STORE = parameters.local_storage
 FILES_EXPIRES = 1

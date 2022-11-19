@@ -6,9 +6,9 @@ import logging
 import os
 import zipfile
 
-from pymysql.converters import escape_string
 import mysql.connector
 import pandas as pd
+from pymysql.converters import escape_string
 from scrapy.exceptions import DropItem
 # useful for handling different item types with a single interface
 from scrapy.pipelines.files import FilesPipeline
@@ -65,7 +65,7 @@ class FundosScraperPipeline(FilesPipeline):
                         logging.error("Failed to upload: " + sql_insert + sql_insert_values)
                     conn.commit()
                     sql_insert_values = ''
-                    logging.info("Uploading rows of " + file_paths[0] + "until " + str(row.Index))
+                    logging.info("Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
                 sql_insert_values = sql_insert_values[:-1] + ';'
                 cursor.execute(sql_insert + sql_insert_values)
@@ -128,7 +128,7 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                         logging.error("Failed to upload: " + sql_insert + sql_insert_values)
                     conn.commit()
                     sql_insert_values = ''
-                    logging.info("Uploading rows of " + file_paths[0] + "until " + str(row.Index))
+                    logging.info("Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
                 sql_insert_values = sql_insert_values[:-1] + ';'
                 cursor.execute(sql_insert + sql_insert_values)
@@ -140,4 +140,68 @@ class FundosScraperPipelineLaminas(FilesPipeline):
             engine.dispose()
             arquivo.close()
             zf.close()
+        return item
+
+
+class FundosScraperPipelineTesouroDireto(FilesPipeline):
+    def file_path(self, request, response=None, info=None):
+        file_name: str = request.url.split("/")[-1]
+        return file_name
+
+    def item_completed(self, results, item, info):
+        if item['pipeline'] == 'tesouro':
+            file_paths = [x['path'] for ok, x in results if ok]
+            if not file_paths:
+                raise DropItem("Item contains no files")
+            item['file_paths'] = file_paths
+
+            # let's get the absolute path from the file
+            absolute_path = os.path.join(self.store.basedir, file_paths[0])
+            df = pd.read_csv(absolute_path, sep=';', engine='python', encoding='latin1', quoting=3, decimal=",")
+            df.columns = [c.replace(' ', '_') for c in df.columns]
+            df['Data_Vencimento'] = pd.to_datetime(df.Data_Vencimento)
+            df['Data_Base'] = pd.to_datetime(df.Data_Base)
+
+            engine = create_engine(
+                'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
+            )
+
+            conn = mysql.connector.connect(
+                host=parameters.host,
+                user=parameters.user,
+                password=parameters.password,
+                database=parameters.database
+            )
+            # Create cursor, used to execute commands
+            cursor = conn.cursor()
+            sql_insert = "REPLACE INTO `" + parameters.tesouro_direto_table_name + "` " + \
+                         "(`nome`, `vencimento`, `data`, `taxa_compra`, `taxa_venda`, `pu_compra`, `pu_venda`, `pu_base`) VALUES "
+            logging.info("Starting upload to database of " + file_paths[0])
+            sql_insert_values = ""
+            for row in df.itertuples():
+                sql_insert_values += " ('" \
+                                     + escape_string(row.Tipo_Titulo) + "','" \
+                                     + row.Data_Vencimento.strftime('%Y-%m-%d') + "','" \
+                                     + row.Data_Base.strftime('%Y-%m-%d') + "','" \
+                                     + str(row.Taxa_Compra_Manha) + "','" \
+                                     + str(row.Taxa_Venda_Manha) + "','" \
+                                     + str(row.PU_Compra_Manha) + "','" \
+                                     + str(row.PU_Venda_Manha) + "','" \
+                                     + str(row.PU_Base_Manha) + "'),"
+                if len(sql_insert_values) > 10240*5:
+                    sql_insert_values = sql_insert_values[:-1] + ';'
+                    try:
+                        cursor.execute(sql_insert + sql_insert_values)
+                    except:
+                        logging.error("Failed to upload: " + sql_insert + sql_insert_values)
+                    conn.commit()
+                    sql_insert_values = ''
+                    logging.info(
+                        "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
+            if len(sql_insert_values) > 0:
+                sql_insert_values = sql_insert_values[:-1] + ';'
+                cursor.execute(sql_insert + sql_insert_values)
+                conn.commit()
+            logging.info("Finished upload to database of " + file_paths[0])
+            engine.dispose()
         return item
