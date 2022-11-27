@@ -27,7 +27,7 @@ class MesesSpider(scrapy.Spider):
         jsonresponse = response.json()
         taxa = float(jsonresponse["taxa"].replace(",", "."))
         dataTaxa = datetime.strptime(jsonresponse["dataTaxa"], '%d/%m/%Y')
-        taxaDiaria = math.pow(taxa, 1 / 252)
+        taxaDiaria = math.pow(taxa / 100 + 1, 1 / 252)
         item = CetipDIItem()
         item['taxaDIAnual'] = str(taxa)
         item['taxaDIDiaria'] = str(taxaDiaria)
