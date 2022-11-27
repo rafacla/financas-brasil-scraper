@@ -8,4 +8,5 @@ pip install mysql
 pip install mysql-connector  
 pip install pymysql  
 pip install fastapi  
-pip install uvicorn[standard]     
+pip install uvicorn[standard]  
+pip install pipenv  
