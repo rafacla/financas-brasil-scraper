@@ -10,3 +10,7 @@ pip install pymysql
 pip install fastapi  
 pip install uvicorn[standard]  
 pip install pipenv  
+
+# using pipenv for scrapy
+pipenv install setuptools scrapy pandas openpyxl
+pipenv install sqlalchemy mysql mysql-connector pymysql
