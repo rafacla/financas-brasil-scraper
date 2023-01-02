@@ -4,6 +4,7 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import logging
 import os
+import sys
 import zipfile
 
 import mysql.connector
@@ -48,7 +49,7 @@ class FundosScraperPipeline(FilesPipeline):
             )
             # Create cursor, used to execute commands
             cursor = conn.cursor()
-            sql_insert = "REPLACE INTO `" + parameters.quotes_table_name + "`" + \
+            sql_insert = "INSERT INTO `" + parameters.quotes_table_name + "`" + \
                          "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_TOTAL`, `VL_QUOTA`, `CAPTC_DIA`, `RESG_DIA`, `NR_COTST`) " + \
                          "VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
@@ -58,17 +59,20 @@ class FundosScraperPipeline(FilesPipeline):
                     row.VL_TOTAL) + "','" + str(row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "','" + str(
                     row.RESG_DIA) + "','" + str(row.NR_COTST) + "'),"
                 if len(sql_insert_values) > 102400 * 5:
-                    sql_insert_values = sql_insert_values[:-1] + ';'
+                    sql_insert_values = sql_insert_values[:-1] + \
+                                        ' ON DUPLICATE KEY UPDATE VL_TOTAL = VALUES(VL_TOTAL), VL_QUOTA = VALUES(VL_QUOTA)'
                     try:
-                        cursor.execute(sql_insert + sql_insert_values)
+                        cursor.execute(sql_insert + sql_insert_values + ';')
                     except:
                         logging.error("Failed to upload: " + sql_insert + sql_insert_values)
                     conn.commit()
                     sql_insert_values = ''
-                    logging.info("Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
+                    logging.info(
+                        "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1] + ';'
-                cursor.execute(sql_insert + sql_insert_values)
+                sql_insert_values = sql_insert_values[:-1] + \
+                                    ' ON DUPLICATE KEY UPDATE VL_TOTAL = VALUES(VL_TOTAL), VL_QUOTA = VALUES(VL_QUOTA)'
+                cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
             engine.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
                            "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
@@ -111,7 +115,7 @@ class FundosScraperPipelineLaminas(FilesPipeline):
             )
             # Create cursor, used to execute commands
             cursor = conn.cursor()
-            sql_insert = "REPLACE INTO `" + parameters.description_table_name + "`" + \
+            sql_insert = "INSERT INTO `" + parameters.description_table_name + "`" + \
                          "(`CNPJ_FUNDO`, `DT_COMPTC`, `DENOM_SOCIAL`, `NM_FANTASIA`)" + \
                          " VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
@@ -121,17 +125,21 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                                      + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + escape_string(str(
                     row.DENOM_SOCIAL)) + "','" + escape_string(str(row.NM_FANTASIA)) + "'),"
                 if len(sql_insert_values) > 10240:
-                    sql_insert_values = sql_insert_values[:-1] + ';'
+                    sql_insert_values = sql_insert_values[:-1] + \
+                                        ' ON DUPLICATE KEY UPDATE NM_FANTASIA = VALUES(NM_FANTASIA)'
+
                     try:
-                        cursor.execute(sql_insert + sql_insert_values)
+                        cursor.execute(sql_insert + sql_insert_values + ';')
                     except:
                         logging.error("Failed to upload: " + sql_insert + sql_insert_values)
                     conn.commit()
                     sql_insert_values = ''
-                    logging.info("Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
+                    logging.info(
+                        "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1] + ';'
-                cursor.execute(sql_insert + sql_insert_values)
+                sql_insert_values = sql_insert_values[:-1] + \
+                                    ' ON DUPLICATE KEY UPDATE NM_FANTASIA = VALUES(NM_FANTASIA)'
+                cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
             engine.execute("REPLACE INTO `" + parameters.scrapy_description_table_name +
                            "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
@@ -157,7 +165,8 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
 
             # let's get the absolute path from the file
             absolute_path = os.path.join(self.store.basedir, file_paths[0])
-            df = pd.read_csv(absolute_path, sep=';', engine='python', encoding='latin1', quoting=3, decimal=",", dayfirst=True)
+            df = pd.read_csv(absolute_path, sep=';', engine='python', encoding='latin1', quoting=3, decimal=",",
+                             dayfirst=True)
             df.columns = [c.replace(' ', '_') for c in df.columns]
             df['Data_Vencimento'] = pd.to_datetime(df.Data_Vencimento, dayfirst=True)
             df['Data_Base'] = pd.to_datetime(df.Data_Base, dayfirst=True)
@@ -174,7 +183,7 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
             )
             # Create cursor, used to execute commands
             cursor = conn.cursor()
-            sql_insert = "REPLACE INTO `" + parameters.tesouro_direto_table_name + "` " + \
+            sql_insert = "INSERT INTO `" + parameters.tesouro_direto_table_name + "` " + \
                          "(`nome`, `vencimento`, `data`, `taxa_compra`, `taxa_venda`, `pu_compra`, `pu_venda`, `pu_base`) VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
@@ -188,19 +197,22 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
                                      + str(row.PU_Compra_Manha) + "','" \
                                      + str(row.PU_Venda_Manha) + "','" \
                                      + str(row.PU_Base_Manha) + "'),"
-                if len(sql_insert_values) > 10240*5:
-                    sql_insert_values = sql_insert_values[:-1] + ';'
+                if len(sql_insert_values) > 10240 * 5:
+                    sql_insert_values = sql_insert_values[:-1] + \
+                                        ' ON DUPLICATE KEY UPDATE taxa_compra = VALUES(taxa_compra), taxa_venda = VALUES(taxa_venda), pu_compra = VALUES(pu_compra), pu_venda = VALUES(pu_venda), pu_base = VALUES(pu_base)'
                     try:
-                        cursor.execute(sql_insert + sql_insert_values)
-                    except:
-                        logging.error("Failed to upload: " + sql_insert + sql_insert_values)
+                        cursor.execute(sql_insert + sql_insert_values + ';')
+                    except Exception as e:
+                        logging.error("Failed to upload: " + str(e))
+
                     conn.commit()
                     sql_insert_values = ''
                     logging.info(
                         "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1] + ';'
-                cursor.execute(sql_insert + sql_insert_values)
+                sql_insert_values = sql_insert_values[:-1] + \
+                                    ' ON DUPLICATE KEY UPDATE taxa_compra = VALUES(taxa_compra), taxa_venda = VALUES(taxa_venda), pu_compra = VALUES(pu_compra), pu_venda = VALUES(pu_venda), pu_base = VALUES(pu_base)'
+                cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
             logging.info("Finished upload to database of " + file_paths[0])
             engine.dispose()
