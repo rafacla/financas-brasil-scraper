@@ -5,6 +5,7 @@ import parameters
 
 engine = create_engine(
     'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
+    pool_pre_ping=True
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
