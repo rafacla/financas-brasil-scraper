@@ -141,9 +141,10 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                                     ' ON DUPLICATE KEY UPDATE NM_FANTASIA = VALUES(NM_FANTASIA)'
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
-            engine.execute("REPLACE INTO `" + parameters.scrapy_description_table_name +
-                           "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
-                               'data_atualizacao'] + "')")
+            with engine.connect() as conn1:
+                result = conn1.execute("REPLACE INTO `" + parameters.scrapy_description_table_name +
+                                       "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
+                                           'data_atualizacao'] + "')")
             logging.info("Finished upload to database of " + file_paths[0])
             engine.dispose()
             arquivo.close()
