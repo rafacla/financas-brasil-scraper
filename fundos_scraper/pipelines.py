@@ -75,9 +75,10 @@ class FundosScraperPipeline(FilesPipeline):
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
             with engine.connect() as conn1:
-                result = conn1.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
-                                       "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
-                                           'data_atualizacao'] + "')")
+                result = conn1.exec_driver_sql("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
+                                               "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
+                                               item[
+                                                   'data_atualizacao'] + "')")
             logging.info("Finished upload to database of " + file_paths[0])
             engine.dispose()
             arquivo.close()
@@ -143,9 +144,10 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
             with engine.connect() as conn1:
-                result = conn1.execute("REPLACE INTO `" + parameters.scrapy_description_table_name +
-                                       "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" + item[
-                                           'data_atualizacao'] + "')")
+                self.sql = conn1.exec_driver_sql(
+                    "REPLACE INTO `" + parameters.scrapy_description_table_name + "` (`link`, `ultima_atualizacao`) VALUES ('" +
+                    file_paths[0] + "','" + item['data_atualizacao'] + "')")
+                result = self.sql
             logging.info("Finished upload to database of " + file_paths[0])
             engine.dispose()
             arquivo.close()
