@@ -74,11 +74,12 @@ class FundosScraperPipeline(FilesPipeline):
                                     ' ON DUPLICATE KEY UPDATE VL_TOTAL = VALUES(VL_TOTAL), VL_QUOTA = VALUES(VL_QUOTA)'
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
-            with engine.connect() as conn1:
-                result = conn1.exec_driver_sql("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
+
+            cursor.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
                                                "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
                                                item[
                                                    'data_atualizacao'] + "')")
+            conn.commit()
             logging.info("Finished upload to database of " + file_paths[0])
             engine.dispose()
             arquivo.close()
