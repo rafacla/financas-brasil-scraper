@@ -14,11 +14,23 @@ from scrapy.exceptions import DropItem
 # useful for handling different item types with a single interface
 from scrapy.pipelines.files import FilesPipeline
 from sqlalchemy import create_engine
-
+from contextlib import contextmanager
+import sys, os
 import parameters
+
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 
 class FundosScraperPipeline(FilesPipeline):
+
     def file_path(self, request, response=None, info=None):
         file_name: str = request.url.split("/")[-1]
         return file_name
@@ -51,10 +63,12 @@ class FundosScraperPipeline(FilesPipeline):
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
             for row in df.itertuples():
-                sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "'),"
+                with suppress_stdout():
+                    sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
+                        row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "'),"
                 if len(sql_insert_values) > 102400 * 5:
                     sql_insert_values = sql_insert_values[:-1] + \
-                                        'ON DUPLICATE KEY UPDATE VL_TOTAL = VALUES(VL_TOTAL), VL_QUOTA = VALUES(' \
+                                        'ON DUPLICATE KEY UPDATE VL_QUOTA = VALUES(' \
                                         'VL_QUOTA) '
                     try:
                         cursor.execute(sql_insert + sql_insert_values + ';')
@@ -71,9 +85,9 @@ class FundosScraperPipeline(FilesPipeline):
                 conn.commit()
 
             cursor.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
-                                               "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
-                                               item[
-                                                   'data_atualizacao'] + "')")
+                           "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
+                           item[
+                               'data_atualizacao'] + "')")
             conn.commit()
             logging.info("Finished upload to database of " + file_paths[0])
 
@@ -139,8 +153,9 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                                     ' ON DUPLICATE KEY UPDATE NM_FANTASIA = VALUES(NM_FANTASIA)'
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
-            cursor.execute("REPLACE INTO `" + parameters.scrapy_description_table_name + "` (`link`, `ultima_atualizacao`) VALUES ('" +
-                    file_paths[0] + "','" + item['data_atualizacao'] + "')")
+            cursor.execute(
+                "REPLACE INTO `" + parameters.scrapy_description_table_name + "` (`link`, `ultima_atualizacao`) VALUES ('" +
+                file_paths[0] + "','" + item['data_atualizacao'] + "')")
             conn.commit()
             logging.info("Finished upload to database of " + file_paths[0])
             engine.dispose()
