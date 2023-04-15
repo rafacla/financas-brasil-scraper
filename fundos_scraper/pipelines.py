@@ -37,10 +37,6 @@ class FundosScraperPipeline(FilesPipeline):
             df = df.drop(columns=['TP_FUNDO', 'VL_PATRIM_LIQ'])
             df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
 
-            engine = create_engine(
-                'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
-            )
-
             conn = mysql.connector.connect(
                 host=parameters.host,
                 user=parameters.user,
@@ -50,17 +46,16 @@ class FundosScraperPipeline(FilesPipeline):
             # Create cursor, used to execute commands
             cursor = conn.cursor()
             sql_insert = "INSERT INTO `" + parameters.quotes_table_name + "`" + \
-                         "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_TOTAL`, `VL_QUOTA`, `CAPTC_DIA`, `RESG_DIA`, `NR_COTST`) " + \
+                         "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_QUOTA`) " + \
                          "VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
             for row in df.itertuples():
-                sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
-                    row.VL_TOTAL) + "','" + str(row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "','" + str(
-                    row.RESG_DIA) + "','" + str(row.NR_COTST) + "'),"
+                sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(row.VL_QUOTA) + "','" + str(row.CAPTC_DIA) + "'),"
                 if len(sql_insert_values) > 102400 * 5:
                     sql_insert_values = sql_insert_values[:-1] + \
-                                        ' ON DUPLICATE KEY UPDATE VL_TOTAL = VALUES(VL_TOTAL), VL_QUOTA = VALUES(VL_QUOTA)'
+                                        'ON DUPLICATE KEY UPDATE VL_TOTAL = VALUES(VL_TOTAL), VL_QUOTA = VALUES(' \
+                                        'VL_QUOTA) '
                     try:
                         cursor.execute(sql_insert + sql_insert_values + ';')
                     except:
@@ -81,7 +76,7 @@ class FundosScraperPipeline(FilesPipeline):
                                                    'data_atualizacao'] + "')")
             conn.commit()
             logging.info("Finished upload to database of " + file_paths[0])
-            engine.dispose()
+
             arquivo.close()
             zf.close()
         return item

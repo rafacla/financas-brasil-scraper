@@ -44,11 +44,7 @@ CREATE TABLE `fundos_cvm_cotas` (
   `id` int(11) NOT NULL,
   `CNPJ_FUNDO` varchar(18) NOT NULL,
   `DT_COMPTC` date NOT NULL,
-  `VL_TOTAL` float NOT NULL,
-  `VL_QUOTA` float NOT NULL,
-  `CAPTC_DIA` float NOT NULL,
-  `RESG_DIA` float NOT NULL,
-  `NR_COTST` int(11) NOT NULL
+  `VL_QUOTA` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------

@@ -22,11 +22,7 @@ class CotasFundo(Base):
     id: int = Column(Integer, primary_key=True, index=True)
     CNPJ_FUNDO: str = Column(String(18), nullable=False, unique=True)
     DT_COMPTC: datetime.date = Column(Date, nullable=False)
-    VL_TOTAL: float = Column(Float, nullable=False)
     VL_QUOTA: float = Column(Float, nullable=False)
-    CAPTC_DIA: float = Column(Float, nullable=False)
-    RESG_DIA: float = Column(Float, nullable=False)
-    NR_COTST: int = Column(Integer, nullable=False)
 
 
 class TaxaDI(Base):
