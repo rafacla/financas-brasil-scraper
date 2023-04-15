@@ -63,10 +63,11 @@ class FundosScraperPipeline(FilesPipeline):
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
             for row in df.itertuples():
-                with suppress_stdout():
-                    sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
-                        row.VL_QUOTA) + "'),"
-                    if len(sql_insert_values) > 102400 * 20:
+
+                sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
+                    row.VL_QUOTA) + "'),"
+                if len(sql_insert_values) > 102400 * 5:
+                    with suppress_stdout():
                         sql_insert_values = sql_insert_values[:-1] + \
                                             'ON DUPLICATE KEY UPDATE VL_QUOTA = VALUES(VL_QUOTA) '
                         try:
@@ -75,7 +76,7 @@ class FundosScraperPipeline(FilesPipeline):
                             logging.error("Failed to upload: " + sql_insert + sql_insert_values)
                         conn.commit()
                         sql_insert_values = ''
-                logging.info(
+                    logging.info(
                         "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
                 sql_insert_values = sql_insert_values[:-1] + \
