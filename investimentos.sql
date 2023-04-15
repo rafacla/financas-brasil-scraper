@@ -32,7 +32,7 @@ CREATE TABLE `di_cetip` (
   `dataDI` date NOT NULL,
   `taxaDIAnual` float NOT NULL,
   `taxaDIDiaria` decimal(15,10) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -45,7 +45,7 @@ CREATE TABLE `fundos_cvm_cotas` (
   `CNPJ_FUNDO` varchar(18) NOT NULL,
   `DT_COMPTC` date NOT NULL,
   `VL_QUOTA` float NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -59,7 +59,7 @@ CREATE TABLE `fundos_cvm_descricao` (
   `DT_COMPTC` date NOT NULL,
   `DENOM_SOCIAL` varchar(150) NOT NULL,
   `NM_FANTASIA` varchar(150) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -71,7 +71,7 @@ CREATE TABLE `scrapy_fundos_cvm_cotas` (
   `id` int(11) NOT NULL,
   `link` varchar(50) NOT NULL,
   `ultima_atualizacao` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -83,7 +83,7 @@ CREATE TABLE `scrapy_fundos_cvm_descricao` (
   `id` int(11) NOT NULL,
   `link` varchar(50) NOT NULL,
   `ultima_atualizacao` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -95,7 +95,7 @@ CREATE TABLE `scrapy_tesouro_direto` (
   `id` int(11) NOT NULL,
   `link` varchar(150) NOT NULL,
   `ultima_atualizacao` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -113,7 +113,7 @@ CREATE TABLE `tesouro_direto` (
   `pu_compra` float NOT NULL,
   `pu_venda` float NOT NULL,
   `pu_base` float NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
 --
 -- Índices para tabelas despejadas

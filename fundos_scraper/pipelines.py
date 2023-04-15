@@ -66,7 +66,7 @@ class FundosScraperPipeline(FilesPipeline):
                         "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
                 sql_insert_values = sql_insert_values[:-1] + \
-                                    ' ON DUPLICATE KEY UPDATE VL_TOTAL = VALUES(VL_TOTAL), VL_QUOTA = VALUES(VL_QUOTA)'
+                                    ' ON DUPLICATE KEY UPDATE VL_QUOTA = VALUES(VL_QUOTA)'
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
 
