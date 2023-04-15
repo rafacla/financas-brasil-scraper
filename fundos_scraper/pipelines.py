@@ -66,7 +66,7 @@ class FundosScraperPipeline(FilesPipeline):
                 with suppress_stdout():
                     sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
                         row.VL_QUOTA) + "'),"
-                    if len(sql_insert_values) > 102400 * 5:
+                    if len(sql_insert_values) > 102400 * 50:
                         sql_insert_values = sql_insert_values[:-1] + \
                                             'ON DUPLICATE KEY UPDATE VL_QUOTA = VALUES(VL_QUOTA) '
                         try:
