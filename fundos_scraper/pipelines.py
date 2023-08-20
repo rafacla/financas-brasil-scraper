@@ -7,9 +7,7 @@ import os
 import sys
 import zipfile
 
-import mysql.connector
 import pandas as pd
-from pymysql.converters import escape_string
 from scrapy.exceptions import DropItem
 # useful for handling different item types with a single interface
 from scrapy.pipelines.files import FilesPipeline
