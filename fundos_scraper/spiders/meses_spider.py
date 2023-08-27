@@ -21,7 +21,7 @@ class MesesSpider(scrapy.Spider):
         datas = response.xpath('//pre/text()').getall()
         datas[:] = [desc.strip() for desc in datas]
         datas[:] = [desc[:11] for desc in datas]
-        datas[:] = [datetime.strptime(desc, '%d-%b-%Y %H:%M') for desc in datas if desc != '']
+        datas[:] = [datetime.strptime(desc, '%d-%b-%Y') for desc in datas if desc != '']
         links = response.css('a::attr(href)').getall()
         del links[0:2]
         # Recupera no banco de dados últimos arquivos atualizados
