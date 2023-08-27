@@ -32,19 +32,19 @@ def get_taxa_di(date_since: datetime.date, date_until=None, db: Session = Depend
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Taxa não encontrada, verifique as datas limites"
         )
-    return TaxaDIResponse.from_orm(taxa)
+    return TaxaDIResponse.model_validate(taxa)
 
 
 @app.post("/fundos", response_model=DescricaoFundoResponse, status_code=status.HTTP_201_CREATED)
 def create(request: DescricaoFundoRequest, db: Session = Depends(get_db)):
     fundo = DescricaoFundoRepository.save(db, DescricaoFundo(**request.dict()))
-    return DescricaoFundoResponse.from_orm(fundo)
+    return DescricaoFundoResponse.model_validate(fundo)
 
 
 @app.get("/fundos", response_model=list[DescricaoFundoResponse])
 def find_all(db: Session = Depends(get_db)):
     fundos = DescricaoFundoRepository.find_all(db)
-    return [DescricaoFundoResponse.from_orm(fundo) for fundo in fundos]
+    return [DescricaoFundoResponse.model_validate(fundo) for fundo in fundos]
 
 
 @app.get("/fundos/{cnpj}", response_model=DescricaoFundoResponse)
@@ -66,7 +66,7 @@ def find_by_id(cnpj: str, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj_like[:-1]
         )
-    return DescricaoFundoResponse.from_orm(fundo)
+    return DescricaoFundoResponse.model_validate(fundo)
 
 
 @app.delete("/fundos/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -86,7 +86,7 @@ def update(id: int, request: DescricaoFundoRequest, db: Session = Depends(get_db
             status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado"
         )
     fundo = DescricaoFundoRepository.save(db, DescricaoFundo(id=id, **request.dict()))
-    return DescricaoFundoResponse.from_orm(fundo)
+    return DescricaoFundoResponse.model_validate(fundo)
 
 
 @app.get("/cotas/{cnpj}", response_model=list[CotasFundoResponse])
@@ -110,8 +110,8 @@ def cotas_by_cnpj(cnpj: str, data_de=None, data_ate=None, db: Session = Depends(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cotas não encontradas, CNPJ: " + cnpj_like
         )
-    # return CotasFundoResponse.from_orm(fundos)
-    return [CotasFundoResponse.from_orm(fundo) for fundo in fundos]
+    # return CotasFundoResponse.model_validate(fundos)
+    return [CotasFundoResponse.model_validate(fundo) for fundo in fundos]
 
 
 @app.get("/tesouro/{titulo}/{vencimento}", response_model=list[TesouroResponse])
@@ -124,8 +124,8 @@ def tesouro(titulo: str, vencimento: str, data_de=None, data_ate=None, db: Sessi
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Título não encontrado: " + titulo
         )
-    # return CotasFundoResponse.from_orm(fundos)
-    return [TesouroResponse.from_orm(fundo) for fundo in fundos]
+    # return CotasFundoResponse.model_validate(fundos)
+    return [TesouroResponse.model_validate(fundo) for fundo in fundos]
 
 
 @app.get("/tesouro/todos", response_model=list[TesouroResponse])
