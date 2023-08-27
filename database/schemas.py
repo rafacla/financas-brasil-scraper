@@ -16,9 +16,10 @@ class DescricaoFundoRequest(DescricaoFundoBase):
 
 class DescricaoFundoResponse(DescricaoFundoBase):
     id: int
-
+    
     class Config:
         orm_mode = True
+        from_attributes=True
 
 
 class CotasFundoBase(BaseModel):
@@ -35,7 +36,7 @@ class CotasFundoResponse(CotasFundoBase):
 
     class Config:
         orm_mode = True
-
+        from_attributes=True
 
 class TaxaDIBase(BaseModel):
     dataDI: datetime.date
@@ -53,6 +54,7 @@ class TaxaDIResponse(TaxaDIBase):
 
     class Config:
         orm_mode = True
+        from_attributes=True
 
 
 class TesouroBase(BaseModel):
@@ -75,3 +77,4 @@ class TesouroResponse(TesouroBase):
 
     class Config:
         orm_mode = True
+        from_attributes=True

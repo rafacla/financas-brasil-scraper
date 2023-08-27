@@ -24,7 +24,6 @@ class CotasFundo(Base):
     DT_COMPTC: datetime.date = Column(Date, nullable=False)
     VL_QUOTA: float = Column(Float, nullable=False)
 
-
 class TaxaDI(Base):
     __tablename__ = parameters.taxa_di_table_name
 
