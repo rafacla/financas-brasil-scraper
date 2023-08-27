@@ -11,10 +11,12 @@ import pandas as pd
 from scrapy.exceptions import DropItem
 # useful for handling different item types with a single interface
 from scrapy.pipelines.files import FilesPipeline
-from sqlalchemy import create_engine
 from contextlib import contextmanager
 import sys, os
 import parameters
+from database.database import engine, Base, get_db
+import sqlalchemy
+
 
 @contextmanager
 def suppress_stdout():
@@ -26,6 +28,8 @@ def suppress_stdout():
         finally:
             sys.stdout = old_stdout
 
+def escape_string(string):
+    return str(string).replace("'", "")
 
 class FundosScraperPipeline(FilesPipeline):
 
@@ -47,15 +51,11 @@ class FundosScraperPipeline(FilesPipeline):
             df = df.drop(columns=['TP_FUNDO', 'VL_PATRIM_LIQ'])
             df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
 
-            conn = mysql.connector.connect(
-                host=parameters.host,
-                user=parameters.user,
-                password=parameters.password,
-                database=parameters.database
-            )
             # Create cursor, used to execute commands
+            conn = next(get_db()).connection().connection
             cursor = conn.cursor()
-            sql_insert = "INSERT INTO `" + parameters.quotes_table_name + "`" + \
+
+            sql_insert = "REPLACE INTO `" + parameters.quotes_table_name + "`" + \
                          "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_QUOTA`) " + \
                          "VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
@@ -64,10 +64,9 @@ class FundosScraperPipeline(FilesPipeline):
 
                 sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
                     row.VL_QUOTA) + "'),"
-                if len(sql_insert_values) > 102400 * 5:
+                if len(sql_insert_values) > 10240 * 500:
                     with suppress_stdout():
-                        sql_insert_values = sql_insert_values[:-1] + \
-                                            'ON DUPLICATE KEY UPDATE VL_QUOTA = VALUES(VL_QUOTA) '
+                        sql_insert_values = sql_insert_values[:-1]
                         try:
                             cursor.execute(sql_insert + sql_insert_values + ';')
                         except:
@@ -77,8 +76,7 @@ class FundosScraperPipeline(FilesPipeline):
                     logging.info(
                         "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1] + \
-                                    ' ON DUPLICATE KEY UPDATE VL_QUOTA = VALUES(VL_QUOTA)'
+                sql_insert_values = sql_insert_values[:-1]
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
 
@@ -113,31 +111,21 @@ class FundosScraperPipelineLaminas(FilesPipeline):
             df = pd.read_csv(arquivo, sep=';', engine='python', encoding='latin1', quoting=3)
             df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
 
-            engine = create_engine(
-                'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
-            )
-
-            conn = mysql.connector.connect(
-                host=parameters.host,
-                user=parameters.user,
-                password=parameters.password,
-                database=parameters.database
-            )
             # Create cursor, used to execute commands
+            conn = next(get_db()).connection().connection
             cursor = conn.cursor()
-            sql_insert = "INSERT INTO `" + parameters.description_table_name + "`" + \
+            
+            sql_insert = "REPLACE INTO `" + parameters.description_table_name + "`" + \
                          "(`CNPJ_FUNDO`, `DT_COMPTC`, `DENOM_SOCIAL`, `NM_FANTASIA`)" + \
                          " VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
             for row in df.itertuples():
-                sql_insert_values += " ('" + escape_string(row.CNPJ_FUNDO) + "','" \
-                                     + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + escape_string(str(
-                    row.DENOM_SOCIAL)) + "','" + escape_string(str(row.NM_FANTASIA)) + "'),"
-                if len(sql_insert_values) > 10240:
-                    sql_insert_values = sql_insert_values[:-1] + \
-                                        ' ON DUPLICATE KEY UPDATE NM_FANTASIA = VALUES(NM_FANTASIA)'
-
+                sql_insert_values += " ('" +  str(row.CNPJ_FUNDO) + "','" \
+                                     + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + escape_string(
+                    row.DENOM_SOCIAL) + "','" + escape_string(row.NM_FANTASIA) + "'),"
+                if len(sql_insert_values) > 10240 * 500:
+                    sql_insert_values = sql_insert_values[:-1]
                     try:
                         cursor.execute(sql_insert + sql_insert_values + ';')
                     except:
@@ -147,8 +135,7 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                     logging.info(
                         "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1] + \
-                                    ' ON DUPLICATE KEY UPDATE NM_FANTASIA = VALUES(NM_FANTASIA)'
+                sql_insert_values = sql_insert_values[:-1]
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
             cursor.execute(
@@ -182,25 +169,17 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
             df['Data_Vencimento'] = pd.to_datetime(df.Data_Vencimento, dayfirst=True)
             df['Data_Base'] = pd.to_datetime(df.Data_Base, dayfirst=True)
 
-            engine = create_engine(
-                'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
-            )
-
-            conn = mysql.connector.connect(
-                host=parameters.host,
-                user=parameters.user,
-                password=parameters.password,
-                database=parameters.database
-            )
             # Create cursor, used to execute commands
+            conn = next(get_db()).connection().connection
             cursor = conn.cursor()
-            sql_insert = "INSERT INTO `" + parameters.tesouro_direto_table_name + "` " + \
+
+            sql_insert = "REPLACE INTO `" + parameters.tesouro_direto_table_name + "` " + \
                          "(`nome`, `vencimento`, `data`, `taxa_compra`, `taxa_venda`, `pu_compra`, `pu_venda`, `pu_base`) VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
             for row in df.itertuples():
                 sql_insert_values += " ('" \
-                                     + escape_string(row.Tipo_Titulo) + "','" \
+                                     + sqlalchemy.text(row.Tipo_Titulo) + "','" \
                                      + row.Data_Vencimento.strftime('%Y-%m-%d') + "','" \
                                      + row.Data_Base.strftime('%Y-%m-%d') + "','" \
                                      + str(row.Taxa_Compra_Manha) + "','" \
@@ -208,9 +187,8 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
                                      + str(row.PU_Compra_Manha) + "','" \
                                      + str(row.PU_Venda_Manha) + "','" \
                                      + str(row.PU_Base_Manha) + "'),"
-                if len(sql_insert_values) > 10240 * 5:
-                    sql_insert_values = sql_insert_values[:-1] + \
-                                        ' ON DUPLICATE KEY UPDATE taxa_compra = VALUES(taxa_compra), taxa_venda = VALUES(taxa_venda), pu_compra = VALUES(pu_compra), pu_venda = VALUES(pu_venda), pu_base = VALUES(pu_base)'
+                if len(sql_insert_values) > 10240 * 500:
+                    sql_insert_values = sql_insert_values[:-1] 
                     try:
                         cursor.execute(sql_insert + sql_insert_values + ';')
                     except Exception as e:
@@ -221,8 +199,7 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
                     logging.info(
                         "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
             if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1] + \
-                                    ' ON DUPLICATE KEY UPDATE taxa_compra = VALUES(taxa_compra), taxa_venda = VALUES(taxa_venda), pu_compra = VALUES(pu_compra), pu_venda = VALUES(pu_venda), pu_base = VALUES(pu_base)'
+                sql_insert_values = sql_insert_values[:-1]
                 cursor.execute(sql_insert + sql_insert_values + ';')
                 conn.commit()
             logging.info("Finished upload to database of " + file_paths[0])

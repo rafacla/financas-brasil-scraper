@@ -1,6 +1,6 @@
 from datetime import datetime
 
-import mysql.connector
+from database.database import engine, Base, get_db
 import scrapy
 
 import parameters
@@ -12,14 +12,9 @@ class MesesSpider(scrapy.Spider):
     start_urls = ['https://dados.cvm.gov.br/dados/FI/DOC/LAMINA/DADOS/']
 
     def __init__(self):
-        self.conn = mysql.connector.connect(
-            host=parameters.host,
-            user=parameters.user,
-            password=parameters.password,
-            database=parameters.database
-        )
         # Create cursor, used to execute commands
-        self.cur = self.conn.cursor()
+        self.conn = next(get_db()).connection()
+        self.cur = self.conn.connection.cursor()
 
     def parse(self, response):
         # Recupera links disponíveis na pagina da CVM
