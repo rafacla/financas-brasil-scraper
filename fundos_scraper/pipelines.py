@@ -61,7 +61,6 @@ class FundosScraperPipeline(FilesPipeline):
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
             for row in df.itertuples():
-
                 sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
                     row.VL_QUOTA) + "'),"
                 if len(sql_insert_values) > 10240 * 500:

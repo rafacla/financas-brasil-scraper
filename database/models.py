@@ -20,7 +20,7 @@ class CotasFundo(Base):
     __tablename__ = parameters.quotes_table_name
 
     id: int = Column(Integer, primary_key=True, index=True)
-    CNPJ_FUNDO: str = Column(String(18), nullable=False, unique=True)
+    CNPJ_FUNDO: str = Column(String(18), nullable=False, unique=False)
     DT_COMPTC: datetime.date = Column(Date, nullable=False)
     VL_QUOTA: float = Column(Float, nullable=False)
 
