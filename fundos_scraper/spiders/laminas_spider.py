@@ -8,7 +8,7 @@ from fundos_scraper.items import FundosScraperDescItem
 
 
 class MesesSpider(scrapy.Spider):
-    name = "laminas"
+    name = "fundos_cvm_laminas"
     start_urls = ['https://dados.cvm.gov.br/dados/FI/DOC/LAMINA/DADOS/']
 
     def __init__(self):
