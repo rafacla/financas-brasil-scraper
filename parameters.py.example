@@ -14,4 +14,4 @@ metlife_fund_cnpj = '00.000.000/0000-00'
 metlife_username = ''
 metlife_password = ''
 # Location for storing downloaded files
-local_storage = '/home/cvm'
+local_storage = '~/scraped/cvm'
