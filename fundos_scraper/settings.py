@@ -7,6 +7,7 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 import parameters
+import os
 
 BOT_NAME = 'fundos_scraper'
 
@@ -72,7 +73,7 @@ ITEM_PIPELINES = {
     'fundos_scraper.pipelines.FundosScraperPipelineLaminas': 2,
     'fundos_scraper.pipelines.FundosScraperPipelineTesouroDireto': 3,
 }
-FILES_STORE = parameters.local_storage
+FILES_STORE = os.path.expanduser(parameters.local_storage)
 FILES_EXPIRES = 1
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

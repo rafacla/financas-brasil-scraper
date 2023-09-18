@@ -4,8 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import parameters
 
 engine = create_engine(
-    'mysql://' + parameters.user + ':' + parameters.password + '@' + parameters.host + '/' + parameters.database,
-    pool_pre_ping=True
+    'sqlite:///' + parameters.database + '.db'
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
