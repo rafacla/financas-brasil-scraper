@@ -1,10 +1,11 @@
 import datetime
 import logging
+import parameters
+import uvicorn
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-import uvicorn
 from database.database import engine, Base, get_db
 from database.models import DescricaoFundo
 from database.repositories import DescricaoFundoRepository, TaxaDIRepository, TesouroRepository
@@ -134,4 +135,4 @@ def tesouros_disponiveis(db: Session = Depends(get_db)):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=12001)
+    uvicorn.run(app, host = parameters.api_host, port = parameters.api_port)
