@@ -13,9 +13,12 @@ from scrapy.exceptions import DropItem
 from scrapy.pipelines.files import FilesPipeline
 from contextlib import contextmanager
 import sys, os
-import parameters
+import database.models as Models
+
 from database.database import engine, Base, get_db
+from database.models import DescricaoFundo, CotasFundo
 import sqlalchemy
+from sqlalchemy import event
 
 
 @contextmanager
@@ -45,41 +48,27 @@ class FundosScraperPipeline(FilesPipeline):
         if item['pipeline'] == 'meses':
             # let's get the absolute path from the file
             absolute_path = os.path.join(self.store.basedir, file_paths[0])
+            logging.info("Started upload to database of " + file_paths[0])
+
             zf = zipfile.ZipFile(absolute_path)
             arquivo = zf.open(zf.filelist[0].filename)
             df = pd.read_csv(arquivo, sep=';', engine='python')
-            df = df.drop(columns=['TP_FUNDO', 'VL_PATRIM_LIQ'])
+            df = df[["CNPJ_FUNDO","DT_COMPTC","VL_QUOTA"]]
             df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
+            df['CNPJ_FUNDO'] = df["CNPJ_FUNDO"].str.replace(r'\W','', regex=True)
 
-            # Create cursor, used to execute commands
-            conn = next(get_db()).connection().connection
+            conn = next(get_db()).connection().connection.dbapi_connection
+            df.to_sql(Models.CotasFundo.__tablename__, conn, if_exists="replace", index=False)
+
+            @event.listens_for(engine, "before_cursor_execute")
+            def receive_before_cursor_execute(conn, 
+            cursor, statement, params, context, executemany):
+                if executemany:
+                    cursor.fast_executemany = True            
+            df.to_sql(Models.CotasFundo.__tablename__, conn, index=False, if_exists="append")
+
             cursor = conn.cursor()
-
-            sql_insert = "REPLACE INTO `" + parameters.quotes_table_name + "`" + \
-                         "(`CNPJ_FUNDO`, `DT_COMPTC`, `VL_QUOTA`) " + \
-                         "VALUES "
-            logging.info("Starting upload to database of " + file_paths[0])
-            sql_insert_values = ""
-            for row in df.itertuples():
-                sql_insert_values += " ('" + row.CNPJ_FUNDO + "','" + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + str(
-                    row.VL_QUOTA) + "'),"
-                if len(sql_insert_values) > 10240 * 500:
-                    with suppress_stdout():
-                        sql_insert_values = sql_insert_values[:-1]
-                        try:
-                            cursor.execute(sql_insert + sql_insert_values + ';')
-                        except:
-                            logging.error("Failed to upload: " + sql_insert + sql_insert_values)
-                        conn.commit()
-                        sql_insert_values = ''
-                    logging.info(
-                        "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
-            if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1]
-                cursor.execute(sql_insert + sql_insert_values + ';')
-                conn.commit()
-
-            cursor.execute("REPLACE INTO `" + parameters.scrapy_quotes_table_name +
+            cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Cotas.__tablename__ +
                            "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
                            item[
                                'data_atualizacao'] + "')")
@@ -105,44 +94,36 @@ class FundosScraperPipelineLaminas(FilesPipeline):
 
             # let's get the absolute path from the file
             absolute_path = os.path.join(self.store.basedir, file_paths[0])
+            logging.info("Started upload to database of " + file_paths[0])
+
             zf = zipfile.ZipFile(absolute_path)
             arquivo = zf.open(zf.filelist[0].filename)
             df = pd.read_csv(arquivo, sep=';', engine='python', encoding='latin1', quoting=3)
+            df = df[["CNPJ_FUNDO","DT_COMPTC","DENOM_SOCIAL","NM_FANTASIA"]]
             df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
+            df['CNPJ_FUNDO'] = df["CNPJ_FUNDO"].str.replace(r'\W','', regex=True)
 
-            # Create cursor, used to execute commands
-            conn = next(get_db()).connection().connection
-            cursor = conn.cursor()
+            conn = next(get_db()).connection().connection.dbapi_connection
+            df.to_sql(Models.DescricaoFundo.__tablename__, conn, if_exists="replace", index=False)
+
+            @event.listens_for(engine, "before_cursor_execute")
+            def receive_before_cursor_execute(conn, 
+            cursor, statement, params, context, executemany):
+                if executemany:
+                    cursor.fast_executemany = True
             
-            sql_insert = "REPLACE INTO `" + parameters.description_table_name + "`" + \
-                         "(`CNPJ_FUNDO`, `DT_COMPTC`, `DENOM_SOCIAL`, `NM_FANTASIA`)" + \
-                         " VALUES "
-            logging.info("Starting upload to database of " + file_paths[0])
-            sql_insert_values = ""
-            for row in df.itertuples():
-                sql_insert_values += " ('" +  str(row.CNPJ_FUNDO) + "','" \
-                                     + row.DT_COMPTC.strftime('%Y-%m-%d') + "','" + escape_string(
-                    row.DENOM_SOCIAL) + "','" + escape_string(row.NM_FANTASIA) + "'),"
-                if len(sql_insert_values) > 10240 * 500:
-                    sql_insert_values = sql_insert_values[:-1]
-                    try:
-                        cursor.execute(sql_insert + sql_insert_values + ';')
-                    except:
-                        logging.error("Failed to upload: " + sql_insert + sql_insert_values)
-                    conn.commit()
-                    sql_insert_values = ''
-                    logging.info(
-                        "Uploading rows of " + file_paths[0] + " until " + str(row.Index) + " of " + str(len(df.index)))
-            if len(sql_insert_values) > 0:
-                sql_insert_values = sql_insert_values[:-1]
-                cursor.execute(sql_insert + sql_insert_values + ';')
-                conn.commit()
-            cursor.execute(
-                "REPLACE INTO `" + parameters.scrapy_description_table_name + "` (`link`, `ultima_atualizacao`) VALUES ('" +
-                file_paths[0] + "','" + item['data_atualizacao'] + "')")
+            
+            df.to_sql(Models.DescricaoFundo.__tablename__, conn, index=False, if_exists="append")
+
+            cursor = conn.cursor()
+            cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Descricao.__tablename__ +
+                           "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
+                           item[
+                               'data_atualizacao'] + "')")
             conn.commit()
             logging.info("Finished upload to database of " + file_paths[0])
-            engine.dispose()
+
+
             arquivo.close()
             zf.close()
         return item
@@ -169,10 +150,10 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
             df['Data_Base'] = pd.to_datetime(df.Data_Base, dayfirst=True)
 
             # Create cursor, used to execute commands
-            conn = next(get_db()).connection().connection
+            conn = next(get_db()).connection().connection.dbapi_connection
             cursor = conn.cursor()
 
-            sql_insert = "REPLACE INTO `" + parameters.tesouro_direto_table_name + "` " + \
+            sql_insert = "REPLACE INTO `" + Models.Tesouro.__tablename__ + "` " + \
                          "(`nome`, `vencimento`, `data`, `taxa_compra`, `taxa_venda`, `pu_compra`, `pu_venda`, `pu_base`) VALUES "
             logging.info("Starting upload to database of " + file_paths[0])
             sql_insert_values = ""
