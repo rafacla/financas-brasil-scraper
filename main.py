@@ -1,17 +1,19 @@
 import datetime
 import logging
-import parameters
-import uvicorn
 
-from fastapi import FastAPI, Depends, HTTPException, status
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 
-from database.database import engine, Base, get_db
+import parameters
+from database.database import Base, engine, get_db
 from database.models import DescricaoFundo
-from database.repositories import DescricaoFundoRepository, TaxaDIRepository, TesouroRepository
-from database.schemas import DescricaoFundoRequest, DescricaoFundoResponse, TaxaDIResponse, TesouroResponse
-from database.repositories import CotasFundoRepository
-from database.schemas import CotasFundoRequest, CotasFundoResponse
+from database.repositories import (CotasFundoRepository,
+                                   DescricaoFundoRepository, TaxaDIRepository,
+                                   TesouroRepository)
+from database.schemas import (CotasFundoResponse, DescricaoFundoRequest,
+                              DescricaoFundoResponse, TaxaDIResponse,
+                              TesouroResponse)
 
 Base.metadata.create_all(bind=engine)
 

@@ -6,19 +6,16 @@ import logging
 import os
 import sys
 import zipfile
+from contextlib import contextmanager
 
 import pandas as pd
-from scrapy.exceptions import DropItem
-# useful for handling different item types with a single interface
-from scrapy.pipelines.files import FilesPipeline
-from contextlib import contextmanager
-import sys, os
-import database.models as Models
-
-from database.database import engine, Base, get_db
-from database.models import DescricaoFundo, CotasFundo
 import sqlalchemy
+from scrapy.exceptions import DropItem
+from scrapy.pipelines.files import FilesPipeline
 from sqlalchemy import event
+
+import database.models as Models
+from database.database import engine, get_db
 
 
 @contextmanager

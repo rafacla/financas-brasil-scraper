@@ -2,11 +2,9 @@ import datetime
 
 import sqlalchemy
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import functions, func
+from sqlalchemy.sql import func, functions
 
-from database.models import CotasFundo, Tesouro
-from database.models import DescricaoFundo
-from database.models import TaxaDI
+from database.models import CotasFundo, DescricaoFundo, TaxaDI, Tesouro
 
 
 class DescricaoFundoRepository:

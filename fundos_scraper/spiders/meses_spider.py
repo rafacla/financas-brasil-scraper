@@ -1,9 +1,9 @@
 from datetime import datetime
-import database.models as Models
-from database.database import engine, Base, get_db
+
 import scrapy
 
-import parameters
+import database.models as Models
+from database.database import get_db
 from fundos_scraper.items import FundosScraperItem
 
 

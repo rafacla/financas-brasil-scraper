@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, Date, Float
+from sqlalchemy import Column, Date, Float, Integer, String
 
 import parameters
 from database.database import Base
