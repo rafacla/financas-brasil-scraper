@@ -1,15 +1,6 @@
 # Database Connection
 database = 'investimentos'
 
-# Database Table Names - todo: remove from parameters and keep on sqlalchemy models
-quotes_table_name = 'fundos_cvm_cotas'
-description_table_name = 'fundos_cvm_descricao'
-taxa_di_table_name = 'di_cetip'
-tesouro_direto_table_name = 'tesouro_direto'
-scrapy_quotes_table_name = 'scrapy_fundos_cvm_cotas'
-scrapy_description_table_name = 'scrapy_fundos_cvm_descricao'
-scrapy_tesouro_direto_table_name = 'scrapy_tesouro_direto'
-
 #Metlife parameters
 metlife_fund_cnpj = '00.000.000/0000-00'
 metlife_username = ''
