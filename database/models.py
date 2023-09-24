@@ -1,28 +1,28 @@
 import datetime
 
-from sqlalchemy import Column, Date, Float, Integer, String
+from sqlalchemy import Column, Date, Float, Integer, String, UniqueConstraint
 
-import parameters
 from database.database import Base
 
 
 class DescricaoFundo(Base):
     __tablename__ = 'fundos_cvm_descricao'
 
-    id: int = Column(Integer, primary_key=True, index=True)
-    CNPJ_FUNDO: str = Column(String(14), nullable=False, unique=True, index=True)
+    CNPJ_FUNDO: str = Column(String(14), nullable=False, primary_key=True, index=True)
     DT_COMPTC: datetime.date = Column(Date, nullable=False)
     DENOM_SOCIAL: str = Column(String(150), nullable=False)
-    NM_FANTASIA: str = Column(String(150), nullable=False)
+    NM_FANTASIA: str = Column(String(150), nullable=True)
 
 
 class CotasFundo(Base):
     __tablename__ = 'fundos_cvm_cotas'
+    __table_args__ = (UniqueConstraint("CNPJ_FUNDO", "DT_COMPTC", name="_CNPJ_FUNDO_DT_COMPTC_UC"), )
 
     id: int = Column(Integer, primary_key=True, index=True)
     CNPJ_FUNDO: str = Column(String(14), nullable=False, unique=False, index=True)
     DT_COMPTC: datetime.date = Column(Date, nullable=False)
     VL_QUOTA: float = Column(Float, nullable=False)
+
 
 class TaxaDI(Base):
     __tablename__ = 'di_cetip'

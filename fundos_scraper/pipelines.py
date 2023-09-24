@@ -13,10 +13,12 @@ import sqlalchemy
 from scrapy.exceptions import DropItem
 from scrapy.pipelines.files import FilesPipeline
 from sqlalchemy import event
+from sqlalchemy.dialects.sqlite import insert
 
 import database.models as Models
 from database.database import engine, get_db
 
+import parameters
 
 @contextmanager
 def suppress_stdout():
@@ -54,17 +56,27 @@ class FundosScraperPipeline(FilesPipeline):
             df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
             df['CNPJ_FUNDO'] = df["CNPJ_FUNDO"].str.replace(r'\W','', regex=True)
 
-            conn = next(get_db()).connection().connection.dbapi_connection
-            df.to_sql(Models.CotasFundo.__tablename__, conn, if_exists="replace", index=False)
+            conn = next(get_db()).connection()
+            
+            def insert_on_conflict_update(table, conn, keys, data_iter):
+                data = [dict(zip(keys, row)) for row in data_iter]
+                stmt = (
+                    insert(Models.CotasFundo)
+                    .values(data)
+                )
+                stmt = stmt.on_conflict_do_update(index_elements=["CNPJ_FUNDO", "DT_COMPTC"], set_=dict(VL_QUOTA=stmt.excluded.VL_QUOTA))
+                result = conn.execute(stmt)
+                return result.rowcount
 
+            
             @event.listens_for(engine, "before_cursor_execute")
             def receive_before_cursor_execute(conn, 
             cursor, statement, params, context, executemany):
                 if executemany:
                     cursor.fast_executemany = True            
-            df.to_sql(Models.CotasFundo.__tablename__, conn, index=False, if_exists="append")
+            df.to_sql(Models.CotasFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update, chunksize=5000)
 
-            cursor = conn.cursor()
+            cursor = conn.connection.cursor()
             cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Cotas.__tablename__ +
                            "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
                            item[
@@ -100,8 +112,17 @@ class FundosScraperPipelineLaminas(FilesPipeline):
             df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
             df['CNPJ_FUNDO'] = df["CNPJ_FUNDO"].str.replace(r'\W','', regex=True)
 
-            conn = next(get_db()).connection().connection.dbapi_connection
-            df.to_sql(Models.DescricaoFundo.__tablename__, conn, if_exists="replace", index=False)
+            conn = next(get_db()).connection()
+            
+            def insert_on_conflict_update(table, conn, keys, data_iter):
+                data = [dict(zip(keys, row)) for row in data_iter]
+                stmt = (
+                    insert(Models.DescricaoFundo)
+                    .values(data)
+                )
+                stmt = stmt.on_conflict_do_update(index_elements=['CNPJ_FUNDO'], set_=dict(NM_FANTASIA=stmt.excluded.NM_FANTASIA, DENOM_SOCIAL=stmt.excluded.DENOM_SOCIAL, DT_COMPTC=stmt.excluded.DT_COMPTC))
+                result = conn.execute(stmt)
+                return result.rowcount
 
             @event.listens_for(engine, "before_cursor_execute")
             def receive_before_cursor_execute(conn, 
@@ -110,9 +131,9 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                     cursor.fast_executemany = True
             
             
-            df.to_sql(Models.DescricaoFundo.__tablename__, conn, index=False, if_exists="append")
+            df.to_sql(Models.DescricaoFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update)
 
-            cursor = conn.cursor()
+            cursor = conn.connection.cursor()
             cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Descricao.__tablename__ +
                            "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
                            item[

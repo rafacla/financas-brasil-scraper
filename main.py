@@ -53,16 +53,7 @@ def find_all(db: Session = Depends(get_db)):
 @app.get("/fundos/{cnpj}", response_model=DescricaoFundoResponse)
 def find_by_id(cnpj: str, db: Session = Depends(get_db)):
     cnpj = cnpj.replace('.', '').replace('-', '').replace('/', '')
-    cnpj_like = ''
-    for i, letra in enumerate(cnpj):
-        if i == 2 or i == 5:
-            cnpj_like += '.'
-        elif i == 8:
-            cnpj_like += '/'
-        elif i == 12:
-            cnpj_like += '-'
-        cnpj_like += letra
-    cnpj_like = cnpj_like + '%'
+    cnpj_like = '%' + cnpj + '%'
     fundo = DescricaoFundoRepository.find_by_cnpj(db, cnpj_like)
     print(cnpj_like)
     if not fundo:
@@ -97,15 +88,7 @@ def update(id: int, request: DescricaoFundoRequest, db: Session = Depends(get_db
 @app.get("/cotas/{cnpj}/{data_de}/{data_ate}", response_model=list[CotasFundoResponse])
 def cotas_by_cnpj(cnpj: str, data_de=None, data_ate=None, db: Session = Depends(get_db)):
     cnpj = cnpj.replace('.', '').replace('-', '').replace('/', '')
-    cnpj_like = ''
-    for i, letra in enumerate(cnpj):
-        if i == 2 or i == 5:
-            cnpj_like += '.'
-        elif i == 8:
-            cnpj_like += '/'
-        elif i == 12:
-            cnpj_like += '-'
-        cnpj_like += letra
+    cnpj_like = cnpj
 
     fundos = CotasFundoRepository.find_by_cnpj(db, cnpj_like, data_de, data_ate)
 
