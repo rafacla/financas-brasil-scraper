@@ -3,7 +3,7 @@ from datetime import datetime
 
 import scrapy
 
-import parameters
+import database.models as Models
 from database.database import get_db
 from fundos_scraper.items import CetipDIItem
 
@@ -28,7 +28,7 @@ class MesesSpider(scrapy.Spider):
         item['taxaDIDiaria'] = str(taxaDiaria)
         item['dataTaxaDI'] = datetime.strftime(dataTaxa, '%Y-%m-%d')
         # Recupera no banco de dados últimos arquivos atualizados
-        sql = "REPLACE INTO `" + parameters.taxa_di_table_name + \
+        sql = "REPLACE INTO `" + Models.TaxaDI.__tablename__ + \
             "` (`dataDI`, `taxaDIAnual`, `taxaDIDiaria`) VALUES (?, ?, ?);"
         self.cur.execute(sql, (item['dataTaxaDI'] , item['taxaDIAnual'], item['taxaDIDiaria']))
         self.conn.commit()
