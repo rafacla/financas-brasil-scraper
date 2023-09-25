@@ -34,10 +34,10 @@ class DescricaoFundoRepository:
             db.commit()
 
     def find_by_cnpj(db: Session, cnpj: str) -> DescricaoFundo:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
+        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO.like(cnpj)).first()
 
     def find_by_name(db: Session, name: str) -> DescricaoFundo:
-        return db.query(DescricaoFundo).filter(or_(DescricaoFundo.NM_FANTASIA.like('%'+name+'%'), DescricaoFundo.DENOM_SOCIAL.like('%'+name+'%'))).all()
+        return db.query(DescricaoFundo).filter(or_(DescricaoFundo.NM_FANTASIA.like('%'+name+'%'), DescricaoFundo.DENOM_SOCIAL.like('%'+name+'%'), DescricaoFundo.CNPJ_FUNDO.like('%'+name+'%'))).all()
 
 class CotasFundoRepository:
     @staticmethod
