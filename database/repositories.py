@@ -14,7 +14,7 @@ class DescricaoFundoRepository:
 
     @staticmethod
     def save(db: Session, descricaoFundo: DescricaoFundo) -> DescricaoFundo:
-        if descricaoFundo.id:
+        if descricaoFundo.CNPJ_FUNDOj:
             db.merge(descricaoFundo)
         else:
             db.add(descricaoFundo)
@@ -22,16 +22,12 @@ class DescricaoFundoRepository:
         return descricaoFundo
 
     @staticmethod
-    def find_by_id(db: Session, id: int) -> DescricaoFundo:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.id == id).first()
+    def exists_by_cnpj(db: Session, cnpj: int) -> bool:
+        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first() is not None
 
     @staticmethod
-    def exists_by_id(db: Session, id: int) -> bool:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.id == id).first() is not None
-
-    @staticmethod
-    def delete_by_id(db: Session, id: int) -> None:
-        descricaoFundo = db.query(DescricaoFundo).filter(DescricaoFundo.id == id).first()
+    def delete_by_cnpj(db: Session, cnpj: int) -> None:
+        descricaoFundo = db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
         if descricaoFundo is not None:
             db.delete(descricaoFundo)
             db.commit()

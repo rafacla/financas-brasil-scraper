@@ -63,23 +63,23 @@ def find_by_id(cnpj: str, db: Session = Depends(get_db)):
     return DescricaoFundoResponse.validate(fundo)
 
 
-@app.delete("/fundos/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_by_id(id: int, db: Session = Depends(get_db)):
-    if not DescricaoFundoRepository.exists_by_id(db, id):
+@app.delete("/fundos/{cnpj}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_by_id(cnpj: int, db: Session = Depends(get_db)):
+    if not DescricaoFundoRepository.exists_by_cnpj(db, cnpj):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado"
         )
-    DescricaoFundoRepository.delete_by_id(db, id)
+    DescricaoFundoRepository.delete_by_cnpj(db, cnpj)
     return DescricaoFundoResponse(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put("/fundos/{id}", response_model=DescricaoFundoResponse)
-def update(id: int, request: DescricaoFundoRequest, db: Session = Depends(get_db)):
-    if not DescricaoFundoRepository.exists_by_id(db, id):
+@app.put("/fundos/{cnpj}", response_model=DescricaoFundoResponse)
+def update(cnpj: int, request: DescricaoFundoRequest, db: Session = Depends(get_db)):
+    if not DescricaoFundoRepository.exists_by_cnpj(db, cnpj):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado"
         )
-    fundo = DescricaoFundoRepository.save(db, DescricaoFundo(id=id, **request.dict()))
+    fundo = DescricaoFundoRepository.save(db, DescricaoFundo(id=cnpj, **request.dict()))
     return DescricaoFundoResponse.validate(fundo)
 
 
