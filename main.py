@@ -53,12 +53,10 @@ def find_all(db: Session = Depends(get_db)):
 @app.get("/fundos/{cnpj}", response_model=DescricaoFundoResponse)
 def find_by_id(cnpj: str, db: Session = Depends(get_db)):
     cnpj = cnpj.replace('.', '').replace('-', '').replace('/', '')
-    cnpj_like = '%' + cnpj + '%'
-    fundo = DescricaoFundoRepository.find_by_cnpj(db, cnpj_like)
-    print(cnpj_like)
+    fundo = DescricaoFundoRepository.find_by_cnpj(db, cnpj)
     if not fundo:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj_like[:-1]
+            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj
         )
     return DescricaoFundoResponse.validate(fundo)
 

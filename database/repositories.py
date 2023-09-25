@@ -33,7 +33,7 @@ class DescricaoFundoRepository:
             db.commit()
 
     def find_by_cnpj(db: Session, cnpj: str) -> DescricaoFundo:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO.like(cnpj)).first()
+        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
 
 
 class CotasFundoRepository:
