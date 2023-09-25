@@ -5,9 +5,9 @@ from pydantic.schema import Optional
 
 
 class DescricaoFundoBase(BaseModel):
-    CNPJ_FUNDO: str
-    DT_COMPTC: datetime.date
-    DENOM_SOCIAL: str
+    CNPJ_FUNDO: Optional[str]
+    DT_COMPTC: Optional[datetime.date]
+    DENOM_SOCIAL: Optional[str]
     NM_FANTASIA: Optional[str]
 
 

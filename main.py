@@ -60,6 +60,15 @@ def find_by_id(cnpj: str, db: Session = Depends(get_db)):
         )
     return DescricaoFundoResponse.validate(fundo)
 
+@app.get("/fundos/name/{name}", response_model=list[DescricaoFundoResponse])
+def find_by_name(name: str, db: Session = Depends(get_db)):
+    fundos = DescricaoFundoRepository.find_by_name(db, name)
+    if not fundos:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, nome: " + name
+        )
+    return [DescricaoFundoResponse.validate(fundo) for fundo in fundos]
+
 
 @app.delete("/fundos/{cnpj}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_by_id(cnpj: int, db: Session = Depends(get_db)):

@@ -1,6 +1,7 @@
 import datetime
 
 import sqlalchemy
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func, functions
 
@@ -35,6 +36,8 @@ class DescricaoFundoRepository:
     def find_by_cnpj(db: Session, cnpj: str) -> DescricaoFundo:
         return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
 
+    def find_by_name(db: Session, name: str) -> DescricaoFundo:
+        return db.query(DescricaoFundo).filter(or_(DescricaoFundo.NM_FANTASIA.like('%'+name+'%'), DescricaoFundo.DENOM_SOCIAL.like('%'+name+'%'))).all()
 
 class CotasFundoRepository:
     @staticmethod
