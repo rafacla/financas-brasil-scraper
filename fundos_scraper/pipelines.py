@@ -12,7 +12,7 @@ import pandas as pd
 import sqlalchemy
 from scrapy.exceptions import DropItem
 from scrapy.pipelines.files import FilesPipeline
-from sqlalchemy import event
+from sqlalchemy import event, Integer
 from sqlalchemy.dialects.sqlite import insert
 
 import database.models as Models
@@ -74,7 +74,7 @@ class FundosScraperPipeline(FilesPipeline):
             cursor, statement, params, context, executemany):
                 if executemany:
                     cursor.fast_executemany = True            
-            df.to_sql(Models.CotasFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update, chunksize=5000)
+            df.to_sql(Models.CotasFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update, chunksize=5000, dtype={'CNPJ_FUNDO': Integer})
 
             cursor = conn.connection.cursor()
             cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Cotas.__tablename__ +
@@ -131,7 +131,7 @@ class FundosScraperPipelineLaminas(FilesPipeline):
                     cursor.fast_executemany = True
             
             
-            df.to_sql(Models.DescricaoFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update)
+            df.to_sql(Models.DescricaoFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update, dtype={'CNPJ_FUNDO': Integer})
 
             cursor = conn.connection.cursor()
             cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Descricao.__tablename__ +
