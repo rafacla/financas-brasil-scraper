@@ -160,11 +160,11 @@ class TesouroRepository:
     def get_titulo(db: Session, nome: str, vencimento: str, date_since=None, date_until=None) -> [Tesouro]:
         query = db.query(Tesouro).filter(Tesouro.nome == nome).filter(Tesouro.vencimento == vencimento)
         if date_since is not None and date_until is not None:
-            taxas = query.filter(Tesouro.data >= date_since).filter(Tesouro.data <= date_until).all()
+            taxas = query.filter(Tesouro.data >= date_since).filter(Tesouro.data <= date_until).order_by(Tesouro.data).all()
         elif date_since is not None:
-            taxas = query.filter(Tesouro.data >= date_since).all()
+            taxas = query.filter(Tesouro.data >= date_since).order_by(Tesouro.data).all()
         else:
-            taxas = query.all()
+            taxas = query.order_by(Tesouro.data).all()
         return taxas
 
     def get_titulos_disponiveis(db: Session) -> [Tesouro]:
