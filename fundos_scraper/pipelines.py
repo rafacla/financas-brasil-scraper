@@ -177,7 +177,7 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
             sql_insert_values = ""
             for row in df.itertuples():
                 sql_insert_values += " ('" \
-                                     + sqlalchemy.text(row.Tipo_Titulo) + "','" \
+                                     + sqlalchemy.text(row.Tipo_Titulo).text + "','" \
                                      + row.Data_Vencimento.strftime('%Y-%m-%d') + "','" \
                                      + row.Data_Base.strftime('%Y-%m-%d') + "','" \
                                      + str(row.Taxa_Compra_Manha) + "','" \
