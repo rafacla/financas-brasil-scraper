@@ -1,8 +1,8 @@
-from database.database import engine, Base, get_db
 import scrapy
-from scrapy import Request, FormRequest
+from scrapy import FormRequest
 
 import parameters
+from database.database import Base, engine, get_db
 
 
 class MetlifeSpider(scrapy.Spider):

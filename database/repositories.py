@@ -1,12 +1,11 @@
 import datetime
 
 import sqlalchemy
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import functions, func
+from sqlalchemy.sql import func, functions
 
-from database.models import CotasFundo, Tesouro
-from database.models import DescricaoFundo
-from database.models import TaxaDI
+from database.models import CotasFundo, DescricaoFundo, TaxaDI, Tesouro
 
 
 class DescricaoFundoRepository:
@@ -16,7 +15,7 @@ class DescricaoFundoRepository:
 
     @staticmethod
     def save(db: Session, descricaoFundo: DescricaoFundo) -> DescricaoFundo:
-        if descricaoFundo.id:
+        if descricaoFundo.CNPJ_FUNDOj:
             db.merge(descricaoFundo)
         else:
             db.add(descricaoFundo)
@@ -24,16 +23,12 @@ class DescricaoFundoRepository:
         return descricaoFundo
 
     @staticmethod
-    def find_by_id(db: Session, id: int) -> DescricaoFundo:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.id == id).first()
+    def exists_by_cnpj(db: Session, cnpj: int) -> bool:
+        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first() is not None
 
     @staticmethod
-    def exists_by_id(db: Session, id: int) -> bool:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.id == id).first() is not None
-
-    @staticmethod
-    def delete_by_id(db: Session, id: int) -> None:
-        descricaoFundo = db.query(DescricaoFundo).filter(DescricaoFundo.id == id).first()
+    def delete_by_cnpj(db: Session, cnpj: int) -> None:
+        descricaoFundo = db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
         if descricaoFundo is not None:
             db.delete(descricaoFundo)
             db.commit()
@@ -41,6 +36,8 @@ class DescricaoFundoRepository:
     def find_by_cnpj(db: Session, cnpj: str) -> DescricaoFundo:
         return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO.like(cnpj)).first()
 
+    def find_by_name(db: Session, name: str) -> DescricaoFundo:
+        return db.query(DescricaoFundo).filter(or_(DescricaoFundo.NM_FANTASIA.like('%'+name+'%'), DescricaoFundo.DENOM_SOCIAL.like('%'+name+'%'), DescricaoFundo.CNPJ_FUNDO.like('%'+name+'%'))).all()
 
 class CotasFundoRepository:
     @staticmethod
@@ -163,11 +160,11 @@ class TesouroRepository:
     def get_titulo(db: Session, nome: str, vencimento: str, date_since=None, date_until=None) -> [Tesouro]:
         query = db.query(Tesouro).filter(Tesouro.nome == nome).filter(Tesouro.vencimento == vencimento)
         if date_since is not None and date_until is not None:
-            taxas = query.filter(Tesouro.data >= date_since).filter(Tesouro.data <= date_until).all()
+            taxas = query.filter(Tesouro.data >= date_since).filter(Tesouro.data <= date_until).order_by(Tesouro.data).all()
         elif date_since is not None:
-            taxas = query.filter(Tesouro.data >= date_since).all()
+            taxas = query.filter(Tesouro.data >= date_since).order_by(Tesouro.data).all()
         else:
-            taxas = query.all()
+            taxas = query.order_by(Tesouro.data).all()
         return taxas
 
     def get_titulos_disponiveis(db: Session) -> [Tesouro]:

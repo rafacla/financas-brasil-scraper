@@ -1,13 +1,14 @@
 import datetime
 
 from pydantic import BaseModel
+from pydantic.schema import Optional
 
 
 class DescricaoFundoBase(BaseModel):
-    CNPJ_FUNDO: str
-    DT_COMPTC: datetime.date
-    DENOM_SOCIAL: str
-    NM_FANTASIA: str
+    CNPJ_FUNDO: Optional[str]
+    DT_COMPTC: Optional[datetime.date]
+    DENOM_SOCIAL: Optional[str]
+    NM_FANTASIA: Optional[str]
 
 
 class DescricaoFundoRequest(DescricaoFundoBase):
@@ -15,8 +16,8 @@ class DescricaoFundoRequest(DescricaoFundoBase):
 
 
 class DescricaoFundoResponse(DescricaoFundoBase):
-    id: int
-    
+    ...
+
     class Config:
         orm_mode = True
         from_attributes=True

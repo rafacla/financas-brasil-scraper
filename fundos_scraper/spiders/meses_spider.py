@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from database.database import engine, Base, get_db
 import scrapy
 
-import parameters
+import database.models as Models
+from database.database import get_db
 from fundos_scraper.items import FundosScraperItem
 
 
@@ -25,8 +25,8 @@ class MesesSpider(scrapy.Spider):
         links = response.css('a::attr(href)').getall()
         del links[0:2]
         # Recupera no banco de dados últimos arquivos atualizados
-        self.cur.execute("select * from `"+parameters.scrapy_quotes_table_name+"`")
-        mysql_items = self.cur.fetchall()
+        self.cur.execute("select * from `"+ Models.Scrapy_Fundos_Cotas.__tablename__ +"`")
+        db_items = self.cur.fetchall()
         # Agora iremos comparar quais itens já estão atualizados
         i = 0
         j = 0
@@ -43,8 +43,8 @@ class MesesSpider(scrapy.Spider):
             k += 1
         try:
             while i < len(links):
-                while j < len(mysql_items):
-                    if mysql_items[j][1] == links[i] and mysql_items[j][2] >= datas[i].date():
+                while j < len(db_items):
+                    if db_items[j][1] == links[i] and datetime.strptime(db_items[j][2],'%Y-%m-%d').date() >= datas[i].date():
                         links.pop(i)
                         datas.pop(i)
                         i = 0

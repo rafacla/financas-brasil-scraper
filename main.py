@@ -1,16 +1,19 @@
 import datetime
 import logging
 
-from fastapi import FastAPI, Depends, HTTPException, status
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 
-import uvicorn
-from database.database import engine, Base, get_db
+import parameters
+from database.database import Base, engine, get_db
 from database.models import DescricaoFundo
-from database.repositories import DescricaoFundoRepository, TaxaDIRepository, TesouroRepository
-from database.schemas import DescricaoFundoRequest, DescricaoFundoResponse, TaxaDIResponse, TesouroResponse
-from database.repositories import CotasFundoRepository
-from database.schemas import CotasFundoRequest, CotasFundoResponse
+from database.repositories import (CotasFundoRepository,
+                                   DescricaoFundoRepository, TaxaDIRepository,
+                                   TesouroRepository)
+from database.schemas import (CotasFundoResponse, DescricaoFundoRequest,
+                              DescricaoFundoResponse, TaxaDIResponse,
+                              TesouroResponse)
 
 Base.metadata.create_all(bind=engine)
 
@@ -50,42 +53,40 @@ def find_all(db: Session = Depends(get_db)):
 @app.get("/fundos/{cnpj}", response_model=DescricaoFundoResponse)
 def find_by_id(cnpj: str, db: Session = Depends(get_db)):
     cnpj = cnpj.replace('.', '').replace('-', '').replace('/', '')
-    cnpj_like = ''
-    for i, letra in enumerate(cnpj):
-        if i == 2 or i == 5:
-            cnpj_like += '.'
-        elif i == 8:
-            cnpj_like += '/'
-        elif i == 12:
-            cnpj_like += '-'
-        cnpj_like += letra
-    cnpj_like = cnpj_like + '%'
-    fundo = DescricaoFundoRepository.find_by_cnpj(db, cnpj_like)
-    print(cnpj_like)
+    fundo = DescricaoFundoRepository.find_by_cnpj(db, cnpj)
     if not fundo:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj_like[:-1]
+            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, CNPJ: " + cnpj
         )
     return DescricaoFundoResponse.validate(fundo)
 
+@app.get("/fundos/name/{name}", response_model=list[DescricaoFundoResponse])
+def find_by_name(name: str, db: Session = Depends(get_db)):
+    fundos = DescricaoFundoRepository.find_by_name(db, name)
+    if not fundos:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado, nome: " + name
+        )
+    return [DescricaoFundoResponse.validate(fundo) for fundo in fundos]
 
-@app.delete("/fundos/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_by_id(id: int, db: Session = Depends(get_db)):
-    if not DescricaoFundoRepository.exists_by_id(db, id):
+
+@app.delete("/fundos/{cnpj}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_by_id(cnpj: int, db: Session = Depends(get_db)):
+    if not DescricaoFundoRepository.exists_by_cnpj(db, cnpj):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado"
         )
-    DescricaoFundoRepository.delete_by_id(db, id)
+    DescricaoFundoRepository.delete_by_cnpj(db, cnpj)
     return DescricaoFundoResponse(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put("/fundos/{id}", response_model=DescricaoFundoResponse)
-def update(id: int, request: DescricaoFundoRequest, db: Session = Depends(get_db)):
-    if not DescricaoFundoRepository.exists_by_id(db, id):
+@app.put("/fundos/{cnpj}", response_model=DescricaoFundoResponse)
+def update(cnpj: int, request: DescricaoFundoRequest, db: Session = Depends(get_db)):
+    if not DescricaoFundoRepository.exists_by_cnpj(db, cnpj):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Fundo não encontrado"
         )
-    fundo = DescricaoFundoRepository.save(db, DescricaoFundo(id=id, **request.dict()))
+    fundo = DescricaoFundoRepository.save(db, DescricaoFundo(id=cnpj, **request.dict()))
     return DescricaoFundoResponse.validate(fundo)
 
 
@@ -94,15 +95,7 @@ def update(id: int, request: DescricaoFundoRequest, db: Session = Depends(get_db
 @app.get("/cotas/{cnpj}/{data_de}/{data_ate}", response_model=list[CotasFundoResponse])
 def cotas_by_cnpj(cnpj: str, data_de=None, data_ate=None, db: Session = Depends(get_db)):
     cnpj = cnpj.replace('.', '').replace('-', '').replace('/', '')
-    cnpj_like = ''
-    for i, letra in enumerate(cnpj):
-        if i == 2 or i == 5:
-            cnpj_like += '.'
-        elif i == 8:
-            cnpj_like += '/'
-        elif i == 12:
-            cnpj_like += '-'
-        cnpj_like += letra
+    cnpj_like = cnpj
 
     fundos = CotasFundoRepository.find_by_cnpj(db, cnpj_like, data_de, data_ate)
 
@@ -134,4 +127,4 @@ def tesouros_disponiveis(db: Session = Depends(get_db)):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=12001)
+    uvicorn.run(app, host = parameters.api_host, port = parameters.api_port)
