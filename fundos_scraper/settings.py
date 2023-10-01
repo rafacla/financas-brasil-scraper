@@ -8,7 +8,7 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 import os
 
-import parameters
+import src.parameters as parameters
 
 BOT_NAME = 'fundos_scraper'
 
