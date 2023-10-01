@@ -3,8 +3,8 @@ from datetime import datetime
 
 import scrapy
 
-import database.models as Models
-from database.database import get_db
+import src.database.models as Models
+from src.database.database import get_db
 from fundos_scraper.items import CetipDIItem
 
 
