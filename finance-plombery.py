@@ -20,7 +20,7 @@ async def run_spider(params: InputParams):
     logger = get_logger()
 
     logger.info("Running spider: " + params.spidername)
-    result = subprocess.run(["scrapy", "crawl", params.spidername])
+    result = subprocess.run(["scrapy", "crawl", params.spidername], shell=True)
     logger.info(result)
 
     return result.returncode
