@@ -88,7 +88,6 @@ class FundosScraperPipeline(FilesPipeline):
             zf.close()
         return item
 
-
 class FundosScraperPipelineLaminas(FilesPipeline):
     def file_path(self, request, response=None, info=None):
         file_name: str = request.url.split("/")[-1]
@@ -146,7 +145,6 @@ class FundosScraperPipelineLaminas(FilesPipeline):
             zf.close()
         return item
 
-
 class FundosScraperPipelineTesouroDireto(FilesPipeline):
     def file_path(self, request, response=None, info=None):
         file_name: str = request.url.split("/")[-1]
@@ -203,3 +201,4 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
             logging.info("Finished upload to database of " + file_paths[0])
             engine.dispose()
         return item
+
