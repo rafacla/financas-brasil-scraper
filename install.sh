@@ -91,7 +91,7 @@ Description=$DESCRIPTION
 After=network.target
 
 [Service]
-ExecStart=$PKG_PATH $SERVICE_PATH1
+ExecStart=$PKG_PATH $SERVICE_PATH2
 Restart=on-failure
 
 [Install]
