@@ -7,13 +7,13 @@ import pandas as pd
 import scrapy
 from scrapy.http import Request
 
-import src.database.models as Models
+import database.models as Models
 from fundos_scraper.items import CetipDIItem
-from src.database.database import get_db
+from database.database import get_db
 
 
 class MesesSpider(scrapy.Spider):
-    name = "cetip_div2"
+    name = "cetip_di"
 
     def __init__(self):
         # Retrieve all the existing dates in database - we don't need to update them

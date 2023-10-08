@@ -15,10 +15,10 @@ from scrapy.pipelines.files import FilesPipeline
 from sqlalchemy import event, Integer
 from sqlalchemy.dialects.sqlite import insert
 
-import src.database.models as Models
-from src.database.database import engine, get_db
+import database.models as Models
+from database.database import engine, get_db
 
-import src.parameters as parameters
+import parameters as parameters
 
 @contextmanager
 def suppress_stdout():

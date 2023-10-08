@@ -1,0 +1,20 @@
+# Don't use spaces in this file
+# Database Connection
+database='investimentos'
+
+# Location for storing downloaded files
+local_storage='~/scraped/cvm'
+
+# API Host and Port
+api_host='0.0.0.0'
+api_port=12001
+
+# Scrapy UI Host and Port
+scrapyui_host='0.0.0.0'
+scrapyui_port=12002
+
+# time to run each spider
+cetip_di_hour=0
+tesour_direto_hour=1
+fundos_cvm_laminas_hour=2
+fundos_cvm_cotas_hour=3

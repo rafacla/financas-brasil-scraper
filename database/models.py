@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import Column, Date, Float, Integer, String, UniqueConstraint
 
-from src.database.database import Base
+from database.database import Base
 
 
 class DescricaoFundo(Base):

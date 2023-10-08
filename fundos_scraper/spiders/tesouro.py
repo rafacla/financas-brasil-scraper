@@ -1,6 +1,6 @@
 import scrapy
 
-from src.database.database import get_db
+from database.database import get_db
 from fundos_scraper.items import TesouroDiretoItem
 
 

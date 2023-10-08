@@ -2,8 +2,8 @@ from datetime import datetime
 
 import scrapy
 
-from src.database.database import get_db
-from src.database.models import Scrapy_Fundos_Descricao
+from database.database import get_db
+from database.models import Scrapy_Fundos_Descricao
 from fundos_scraper.items import FundosScraperDescItem
 
 

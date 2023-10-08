@@ -1,5 +1,3 @@
-import datetime
-
 import sqlalchemy
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -24,20 +22,40 @@ class DescricaoFundoRepository:
 
     @staticmethod
     def exists_by_cnpj(db: Session, cnpj: int) -> bool:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first() is not None
+        return (
+            db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
+            is not None
+        )
 
     @staticmethod
     def delete_by_cnpj(db: Session, cnpj: int) -> None:
-        descricaoFundo = db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
+        descricaoFundo = (
+            db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO == cnpj).first()
+        )
         if descricaoFundo is not None:
             db.delete(descricaoFundo)
             db.commit()
 
     def find_by_cnpj(db: Session, cnpj: str) -> DescricaoFundo:
-        return db.query(DescricaoFundo).filter(DescricaoFundo.CNPJ_FUNDO.like(cnpj)).first()
+        return (
+            db.query(DescricaoFundo)
+            .filter(DescricaoFundo.CNPJ_FUNDO.like(cnpj))
+            .first()
+        )
 
     def find_by_name(db: Session, name: str) -> DescricaoFundo:
-        return db.query(DescricaoFundo).filter(or_(DescricaoFundo.NM_FANTASIA.like('%'+name+'%'), DescricaoFundo.DENOM_SOCIAL.like('%'+name+'%'), DescricaoFundo.CNPJ_FUNDO.like('%'+name+'%'))).all()
+        return (
+            db.query(DescricaoFundo)
+            .filter(
+                or_(
+                    DescricaoFundo.NM_FANTASIA.like("%" + name + "%"),
+                    DescricaoFundo.DENOM_SOCIAL.like("%" + name + "%"),
+                    DescricaoFundo.CNPJ_FUNDO.like("%" + name + "%"),
+                )
+            )
+            .all()
+        )
+
 
 class CotasFundoRepository:
     @staticmethod
@@ -68,13 +86,24 @@ class CotasFundoRepository:
             db.delete(cotasFundo)
             db.commit()
 
-    def find_by_cnpj(db: Session, cnpj: str, data_de=None, data_ate=None) -> list[CotasFundo]:
+    def find_by_cnpj(
+        db: Session, cnpj: str, data_de=None, data_ate=None
+    ) -> list[CotasFundo]:
         if data_de is not None and data_ate is not None:
-            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO == cnpj).filter(
-                CotasFundo.DT_COMPTC >= data_de).filter(CotasFundo.DT_COMPTC <= data_ate).all()
+            fundos = (
+                db.query(CotasFundo)
+                .filter(CotasFundo.CNPJ_FUNDO == cnpj)
+                .filter(CotasFundo.DT_COMPTC >= data_de)
+                .filter(CotasFundo.DT_COMPTC <= data_ate)
+                .all()
+            )
         elif data_de is not None:
-            fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO == cnpj).filter(
-                CotasFundo.DT_COMPTC >= data_de).all()
+            fundos = (
+                db.query(CotasFundo)
+                .filter(CotasFundo.CNPJ_FUNDO == cnpj)
+                .filter(CotasFundo.DT_COMPTC >= data_de)
+                .all()
+            )
         else:
             fundos = db.query(CotasFundo).filter(CotasFundo.CNPJ_FUNDO == cnpj).all()
         return fundos
@@ -110,17 +139,21 @@ class TaxaDIRepository:
             db.commit()
 
     def get_taxa_di(db: Session, date_since=None, date_until=None) -> TaxaDI:
-        query = db.query(TaxaDI.id,
-                         func.max(TaxaDI.dataDI).label("dataDI"),
-                         TaxaDI.taxaDIAnual,
-                         TaxaDI.taxaDIDiaria,
-                         func.exp(
-                             functions.sum(
-                                 func.log(TaxaDI.taxaDIDiaria)
-                             )
-                         ).label("taxaDIAcumulada"))
+        query = db.query(
+            TaxaDI.id,
+            func.max(TaxaDI.dataDI).label("dataDI"),
+            TaxaDI.taxaDIAnual,
+            TaxaDI.taxaDIDiaria,
+            func.exp(functions.sum(func.log(TaxaDI.taxaDIDiaria))).label(
+                "taxaDIAcumulada"
+            ),
+        )
         if date_since is not None and date_until is not None:
-            taxas = query.filter(TaxaDI.dataDI >= date_since).filter(TaxaDI.dataDI <= date_until).first()
+            taxas = (
+                query.filter(TaxaDI.dataDI >= date_since)
+                .filter(TaxaDI.dataDI <= date_until)
+                .first()
+            )
         elif date_since is not None:
             taxas = query.filter(TaxaDI.dataDI >= date_since).first()
         else:
@@ -157,18 +190,46 @@ class TesouroRepository:
             db.delete(tesouro)
             db.commit()
 
-    def get_titulo(db: Session, nome: str, vencimento: str, date_since=None, date_until=None) -> [Tesouro]:
-        query = db.query(Tesouro).filter(Tesouro.nome == nome).filter(Tesouro.vencimento == vencimento)
+    def get_titulo(
+        db: Session, nome: str, vencimento: str, date_since=None, date_until=None
+    ) -> [Tesouro]:
+        query = (
+            db.query(Tesouro)
+            .filter(Tesouro.nome == nome)
+            .filter(Tesouro.vencimento == vencimento)
+        )
         if date_since is not None and date_until is not None:
-            taxas = query.filter(Tesouro.data >= date_since).filter(Tesouro.data <= date_until).order_by(Tesouro.data).all()
+            taxas = (
+                query.filter(Tesouro.data >= date_since)
+                .filter(Tesouro.data <= date_until)
+                .order_by(Tesouro.data)
+                .all()
+            )
         elif date_since is not None:
-            taxas = query.filter(Tesouro.data >= date_since).order_by(Tesouro.data).all()
+            taxas = (
+                query.filter(Tesouro.data >= date_since).order_by(Tesouro.data).all()
+            )
         else:
             taxas = query.order_by(Tesouro.data).all()
         return taxas
 
     def get_titulos_disponiveis(db: Session) -> [Tesouro]:
-        subquery = db.query(Tesouro.nome, Tesouro.vencimento, func.max(Tesouro.data).label('ultima_atualizacao')).group_by(Tesouro.nome, Tesouro.vencimento).subquery()
-        query = db.query(Tesouro).join(subquery, sqlalchemy.and_(Tesouro.nome == subquery.c.nome, Tesouro.vencimento == subquery.c.vencimento, Tesouro.data == subquery.c.ultima_atualizacao))
+        subquery = (
+            db.query(
+                Tesouro.nome,
+                Tesouro.vencimento,
+                func.max(Tesouro.data).label("ultima_atualizacao"),
+            )
+            .group_by(Tesouro.nome, Tesouro.vencimento)
+            .subquery()
+        )
+        query = db.query(Tesouro).join(
+            subquery,
+            sqlalchemy.and_(
+                Tesouro.nome == subquery.c.nome,
+                Tesouro.vencimento == subquery.c.vencimento,
+                Tesouro.data == subquery.c.ultima_atualizacao,
+            ),
+        )
         query.order_by(Tesouro.nome, Tesouro.vencimento)
         return query.all()
