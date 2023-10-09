@@ -25,7 +25,7 @@ async def run_spider(params: InputParams):
     result = subprocess.run([sys.executable,"-m","scrapy", "crawl", params.spidername], capture_output=False, cwd=os.path.dirname(os.path.abspath(__file__)))
     logger.info(result)
 
-    yield result.returncode
+    return result.returncode
 
 register_pipeline(
     id="cetip_di",
