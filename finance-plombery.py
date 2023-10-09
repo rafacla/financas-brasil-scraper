@@ -1,4 +1,6 @@
+import os
 import subprocess
+import sys
 import parameters
 
 from datetime import datetime
@@ -20,10 +22,10 @@ async def run_spider(params: InputParams):
     logger = get_logger()
 
     logger.info("Running spider: " + params.spidername)
-    result = subprocess.run(["scrapy", "crawl", params.spidername], shell=True)
+    result = subprocess.run([sys.executable,"-m","scrapy", "crawl", params.spidername], capture_output=False, cwd=os.path.dirname(os.path.abspath(__file__)))
     logger.info(result)
 
-    return result.returncode
+    yield result.returncode
 
 register_pipeline(
     id="cetip_di",

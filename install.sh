@@ -38,6 +38,13 @@ if [[ "$1" == "remove" ]]; then
     exit
 fi
 
+if [[ "$1" == "reload" ]]; then
+    echo "Reloading services"
+    sudo systemctl restart ${SERVICE_NAME1//'.service'/}
+    sudo systemctl restart ${SERVICE_NAME2//'.service'/}
+    exit
+fi
+
 echo "Creating venv environment"
 python3 -m venv .venv
 source .venv/bin/activate
