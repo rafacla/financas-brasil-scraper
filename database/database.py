@@ -9,6 +9,7 @@ import parameters as parameters
 engine = create_engine(
     "sqlite:///"
     + os.path.dirname(os.path.abspath(__file__))
+    + "/"
     + parameters.database
     + ".db"
 )
