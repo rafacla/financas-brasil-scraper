@@ -20,13 +20,14 @@ class DescricaoFundoResponse(DescricaoFundoBase):
 
     class Config:
         orm_mode = True
-        from_attributes=True
+        from_attributes = True
 
 
 class CotasFundoBase(BaseModel):
     CNPJ_FUNDO: str
     DT_COMPTC: datetime.date
     VL_QUOTA: float
+
 
 class CotasFundoRequest(CotasFundoBase):
     ...
@@ -37,7 +38,8 @@ class CotasFundoResponse(CotasFundoBase):
 
     class Config:
         orm_mode = True
-        from_attributes=True
+        from_attributes = True
+
 
 class TaxaDIBase(BaseModel):
     dataDI: datetime.date
@@ -55,7 +57,7 @@ class TaxaDIResponse(TaxaDIBase):
 
     class Config:
         orm_mode = True
-        from_attributes=True
+        from_attributes = True
 
 
 class TesouroBase(BaseModel):
@@ -78,4 +80,4 @@ class TesouroResponse(TesouroBase):
 
     class Config:
         orm_mode = True
-        from_attributes=True
+        from_attributes = True
