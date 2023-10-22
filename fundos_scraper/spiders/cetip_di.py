@@ -1,6 +1,5 @@
-import math
 from datetime import datetime
-from typing import Iterable
+from ftplib import FTP
 
 import numpy as np
 import pandas as pd
@@ -8,18 +7,18 @@ import scrapy
 from scrapy.http import Request
 
 import database.models as Models
-from fundos_scraper.items import CetipDIItem
 from database.database import get_db
+from fundos_scraper.items import CetipDIItem
 
 
-class MesesSpider(scrapy.Spider):
+class CetipDI(scrapy.Spider):
     name = "cetip_di"
 
     def __init__(self):
         # Retrieve all the existing dates in database - we don't need to update them
         self.conn = next(get_db()).connection()
         self.cur = self.conn.connection.cursor()
-        self.cur.execute("select `dataDI` from `" + Models.TaxaDI.__tablename__ + "`")
+        self.cur.execute("select `dataDI` from `" + Models.TaxaDI2.__tablename__ + "`")
         db_items = self.cur.fetchall()
 
         # Create an array with all the business days since year 2000 until today
@@ -33,48 +32,52 @@ class MesesSpider(scrapy.Spider):
                 bdays = bdays.drop(item[0])
 
         self.cetip_dates = pd.DataFrame(
-            np.transpose([bdays, np.ones(len(bdays)), np.ones(len(bdays))]),
-            columns=["dataDI", "taxaDIAnual", "taxaDIDiaria"],
+            np.transpose([bdays, np.ones(len(bdays))]),
+            columns=["dataDI", "indiceDI"],
         )
+
+        self.ftp = FTP('ftp.cetip.com.br')
+        self.ftp.login()
+        self.ftp.cwd('IndiceDI')
+        self.cetip_bdays = self.ftp.nlst()
 
     def start_requests(self):
         for index, row in self.cetip_dates.iterrows():
-            yield Request(
-                url="ftp://ftp.cetip.com.br/MediaCDI/"
-                + row["dataDI"].replace("-", "")
-                + ".txt",
-            errback=self.parse,
-            )
+            filename = row["dataDI"].replace("-", "") + ".txt"
+            url = "ftp://ftp.cetip.com.br/MediaCDI/" + filename
+            if (row["dataDI"].replace("-", "") + ".txt") in self.cetip_bdays:
+                lines = []
+                self.ftp.retrlines("RETR " + filename, lines.append)
+                yield Request(url=url, method="FTP", body=lines[0])
+            else:
+                yield Request(url=url, method="FTP", body="404")
+                
 
     def parse(self, response):
-        if hasattr(response, "value") and response.value.response.status == 404:
-            url = response.value.response.url
-            taxaDIAnual = 1.
-            taxaDiaria = 1.
+        if response.status == 404:
+            url = response.url
+            item["msg"] = "Not found at CETIP FTP"
         else:
             url = response.url
-            taxaDIAnual = int(response.text) / 100
-            taxaDiaria = math.pow(taxaDIAnual / 100 + 1, 1 / 252)
-        dataDI = (
-            url[-12:][:4]
-            + "-"
-            + url[-12:][4:6]
-            + "-"
-            + url[-12:][6:8]
-        )
-        item = CetipDIItem()
-        item["taxaDIAnual"] = str(taxaDIAnual)
-        item["taxaDIDiaria"] = str(taxaDiaria)
-        item["dataTaxaDI"] = dataDI
+            indiceDI = int(response.body.decode())
+            dataDI = (
+                url[-12:][:4]
+                + "-"
+                + url[-12:][4:6]
+                + "-"
+                + url[-12:][6:8]
+            )
+            item = CetipDIItem()
+            item["indiceDI"] = str(indiceDI)
+            item["dataDI"] = dataDI
 
-        # Recupera no banco de dados últimos arquivos atualizados
-        sql = (
-            "INSERT INTO `"
-            + Models.TaxaDI.__tablename__
-            + "` (`dataDI`, `taxaDIAnual`, `taxaDIDiaria`) VALUES (?, ?, ?);"
-        )
-        self.cur.execute(
-            sql, (item["dataTaxaDI"], item["taxaDIAnual"], item["taxaDIDiaria"])
-        )
-        self.conn.commit()
+            sql = (
+                "INSERT INTO `"
+                + Models.TaxaDI2.__tablename__
+                + "` (`dataDI`, `indiceDI`) VALUES (?, ?);"
+            )
+            self.cur.execute(
+                sql, (item["dataDI"], item["indiceDI"])
+            )
+            self.conn.commit()
         yield item

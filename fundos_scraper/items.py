@@ -25,9 +25,8 @@ class FundosScraperDescItem(scrapy.Item):
 
 
 class CetipDIItem(scrapy.Item):
-    taxaDIAnual = scrapy.Field()
-    dataTaxaDI = scrapy.Field()
-    taxaDIDiaria = scrapy.Field()
+    indiceDI = scrapy.Field()
+    dataDI = scrapy.Field()
 
 
 class TesouroDiretoItem(scrapy.Item):
