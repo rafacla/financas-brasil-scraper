@@ -42,9 +42,11 @@ class CotasFundoResponse(CotasFundoBase):
 
 
 class TaxaDIBase(BaseModel):
-    dataDI: datetime.date
-    taxaDIAnual: float
-    taxaDIDiaria: float
+    dataDIInicial: datetime.date
+    taxaDIInicial: float
+    dataDIFinal: datetime.date
+    taxaDIFinal: float
+    taxaDIAcumulada: float
 
 
 class TaxaDIRequest(TaxaDIBase):
@@ -52,7 +54,10 @@ class TaxaDIRequest(TaxaDIBase):
 
 
 class TaxaDIResponse(TaxaDIBase):
-    id: int
+    dataDIInicial: datetime.date
+    taxaDIInicial: float
+    dataDIFinal: datetime.date
+    taxaDIFinal: float
     taxaDIAcumulada: float
 
     class Config:

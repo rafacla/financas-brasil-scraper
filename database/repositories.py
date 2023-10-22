@@ -1,7 +1,7 @@
 import sqlalchemy
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import func, functions
+from sqlalchemy.sql import func, functions, label
 
 from database.models import CotasFundo, DescricaoFundo, TaxaDI2, Tesouro
 
@@ -111,11 +111,11 @@ class CotasFundoRepository:
 
 class TaxaDIRepository:
     @staticmethod
-    def find_all(db: Session) -> list[TaxaDI]:
-        return db.query(TaxaDI).limit(30).all()
+    def find_all(db: Session) -> list[TaxaDI2]:
+        return db.query(TaxaDI2).limit(30).all()
 
     @staticmethod
-    def save(db: Session, taxaDI: TaxaDI) -> TaxaDI:
+    def save(db: Session, taxaDI: TaxaDI2) -> TaxaDI2:
         if taxaDI.id:
             db.merge(taxaDI)
         else:
@@ -124,26 +124,27 @@ class TaxaDIRepository:
         return taxaDI
 
     @staticmethod
-    def find_by_id(db: Session, id: int) -> TaxaDI:
-        return db.query(TaxaDI).filter(TaxaDI.id == id).first()
+    def find_by_id(db: Session, id: int) -> TaxaDI2:
+        return db.query(TaxaDI2).filter(TaxaDI2.id == id).first()
 
     @staticmethod
     def exists_by_id(db: Session, id: int) -> bool:
-        return db.query(TaxaDI).filter(TaxaDI.id == id).first() is not None
+        return db.query(TaxaDI2).filter(TaxaDI2.id == id).first() is not None
 
     @staticmethod
     def delete_by_id(db: Session, id: int) -> None:
-        taxaDI = db.query(TaxaDI).filter(TaxaDI.id == id).first()
+        taxaDI = db.query(TaxaDI2).filter(TaxaDI2.id == id).first()
         if taxaDI is not None:
             db.delete(taxaDI)
             db.commit()
 
     def get_taxa_di(db: Session, date_since=None, date_until=None) -> TaxaDI2:
         query = db.query(
-            func.max(TaxaDI2.dataDI).label("dataDI-max"),
-            func.max(TaxaDI2.indiceDI).label("indiceDI-max"),
-            func.min(TaxaDI2.dataDI).label("dataDI-min"),
-            func.min(TaxaDI2.indiceDI).label("indiceDI-min"),
+            func.min(TaxaDI2.dataDI).label("dataDIInicial"),
+            func.min(TaxaDI2.indiceDI).label("taxaDIInicial"),
+            func.max(TaxaDI2.dataDI).label("dataDIFinal"),
+            func.max(TaxaDI2.indiceDI).label("taxaDIFinal"),
+            label('taxaDIAcumulada', func.max(TaxaDI2.indiceDI) / func.min(TaxaDI2.indiceDI))
         )
         if date_since is not None and date_until is not None:
             taxas = (
