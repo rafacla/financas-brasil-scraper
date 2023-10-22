@@ -40,52 +40,53 @@ class FundosScraperPipeline(FilesPipeline):
         return file_name
 
     def item_completed(self, results, item, info):
-        file_paths = [x['path'] for ok, x in results if ok]
-        if not file_paths:
-            raise DropItem("Item contains no files")
-        item['file_paths'] = file_paths
         if item['pipeline'] == 'meses':
-            # let's get the absolute path from the file
-            absolute_path = os.path.join(self.store.basedir, file_paths[0])
-            logging.info("Started upload to database of " + file_paths[0])
+            file_paths = [x['path'] for ok, x in results if ok]
+            if not file_paths:
+                raise DropItem("Item contains no files")
+            item['file_paths'] = file_paths
+            if item['pipeline'] == 'meses':
+                # let's get the absolute path from the file
+                absolute_path = os.path.join(self.store.basedir, file_paths[0])
+                logging.info("Started upload to database of " + file_paths[0])
 
-            zf = zipfile.ZipFile(absolute_path)
-            arquivo = zf.open(zf.filelist[0].filename)
-            df = pd.read_csv(arquivo, sep=';', engine='python')
-            df = df[["CNPJ_FUNDO","DT_COMPTC","VL_QUOTA"]]
-            df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
-            df['CNPJ_FUNDO'] = df["CNPJ_FUNDO"].str.replace(r'\W','', regex=True)
+                zf = zipfile.ZipFile(absolute_path)
+                arquivo = zf.open(zf.filelist[0].filename)
+                df = pd.read_csv(arquivo, sep=';', engine='python')
+                df = df[["CNPJ_FUNDO","DT_COMPTC","VL_QUOTA"]]
+                df['DT_COMPTC'] = pd.to_datetime(df.DT_COMPTC)
+                df['CNPJ_FUNDO'] = df["CNPJ_FUNDO"].str.replace(r'\W','', regex=True)
 
-            conn = next(get_db()).connection()
-            
-            def insert_on_conflict_update(table, conn, keys, data_iter):
-                data = [dict(zip(keys, row)) for row in data_iter]
-                stmt = (
-                    insert(Models.CotasFundo)
-                    .values(data)
-                )
-                stmt = stmt.on_conflict_do_update(index_elements=["CNPJ_FUNDO", "DT_COMPTC"], set_=dict(VL_QUOTA=stmt.excluded.VL_QUOTA))
-                result = conn.execute(stmt)
-                return result.rowcount
+                conn = next(get_db()).connection()
+                
+                def insert_on_conflict_update(table, conn, keys, data_iter):
+                    data = [dict(zip(keys, row)) for row in data_iter]
+                    stmt = (
+                        insert(Models.CotasFundo)
+                        .values(data)
+                    )
+                    stmt = stmt.on_conflict_do_update(index_elements=["CNPJ_FUNDO", "DT_COMPTC"], set_=dict(VL_QUOTA=stmt.excluded.VL_QUOTA))
+                    result = conn.execute(stmt)
+                    return result.rowcount
 
-            
-            @event.listens_for(engine, "before_cursor_execute")
-            def receive_before_cursor_execute(conn, 
-            cursor, statement, params, context, executemany):
-                if executemany:
-                    cursor.fast_executemany = True            
-            df.to_sql(Models.CotasFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update, chunksize=5000, dtype={'CNPJ_FUNDO': Integer})
+                
+                @event.listens_for(engine, "before_cursor_execute")
+                def receive_before_cursor_execute(conn, 
+                cursor, statement, params, context, executemany):
+                    if executemany:
+                        cursor.fast_executemany = True            
+                df.to_sql(Models.CotasFundo.__tablename__, conn, index=False, if_exists="append", method=insert_on_conflict_update, chunksize=5000, dtype={'CNPJ_FUNDO': Integer})
 
-            cursor = conn.connection.cursor()
-            cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Cotas.__tablename__ +
-                           "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
-                           item[
-                               'data_atualizacao'] + "')")
-            conn.commit()
-            logging.info("Finished upload to database of " + file_paths[0])
+                cursor = conn.connection.cursor()
+                cursor.execute("REPLACE INTO `" + Models.Scrapy_Fundos_Cotas.__tablename__ +
+                            "` (`link`, `ultima_atualizacao`) VALUES ('" + file_paths[0] + "','" +
+                            item[
+                                'data_atualizacao'] + "')")
+                conn.commit()
+                logging.info("Finished upload to database of " + file_paths[0])
 
-            arquivo.close()
-            zf.close()
+                arquivo.close()
+                zf.close()
         return item
 
 class FundosScraperPipelineLaminas(FilesPipeline):
