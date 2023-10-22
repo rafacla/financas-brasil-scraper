@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func, functions
 
-from database.models import CotasFundo, DescricaoFundo, TaxaDI, Tesouro
+from database.models import CotasFundo, DescricaoFundo, TaxaDI2, Tesouro
 
 
 class DescricaoFundoRepository:
@@ -138,24 +138,21 @@ class TaxaDIRepository:
             db.delete(taxaDI)
             db.commit()
 
-    def get_taxa_di(db: Session, date_since=None, date_until=None) -> TaxaDI:
+    def get_taxa_di(db: Session, date_since=None, date_until=None) -> TaxaDI2:
         query = db.query(
-            TaxaDI.id,
-            func.max(TaxaDI.dataDI).label("dataDI"),
-            TaxaDI.taxaDIAnual,
-            TaxaDI.taxaDIDiaria,
-            func.exp(functions.sum(func.log(TaxaDI.taxaDIDiaria))).label(
-                "taxaDIAcumulada"
-            ),
+            func.max(TaxaDI2.dataDI).label("dataDI-max"),
+            func.max(TaxaDI2.indiceDI).label("indiceDI-max"),
+            func.min(TaxaDI2.dataDI).label("dataDI-min"),
+            func.min(TaxaDI2.indiceDI).label("indiceDI-min"),
         )
         if date_since is not None and date_until is not None:
             taxas = (
-                query.filter(TaxaDI.dataDI >= date_since)
-                .filter(TaxaDI.dataDI <= date_until)
+                query.filter(TaxaDI2.dataDI >= date_since)
+                .filter(TaxaDI2.dataDI <= date_until)
                 .first()
             )
         elif date_since is not None:
-            taxas = query.filter(TaxaDI.dataDI >= date_since).first()
+            taxas = query.filter(TaxaDI2.dataDI >= date_since).first()
         else:
             taxas = query.first()
         return taxas

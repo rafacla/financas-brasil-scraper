@@ -14,7 +14,7 @@ engine = create_engine(
     + ".db"
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 

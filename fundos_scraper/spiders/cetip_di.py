@@ -20,6 +20,7 @@ class CetipDI(scrapy.Spider):
         self.cur = self.conn.connection.cursor()
         self.cur.execute("select `dataDI` from `" + Models.TaxaDI2.__tablename__ + "`")
         db_items = self.cur.fetchall()
+        self.cur.close()
 
         # Create an array with all the business days since year 2000 until today
         bdays = pd.bdate_range(start="2015-01-01", end=datetime.today()).strftime(
@@ -76,8 +77,11 @@ class CetipDI(scrapy.Spider):
                 + Models.TaxaDI2.__tablename__
                 + "` (`dataDI`, `indiceDI`) VALUES (?, ?);"
             )
+            self.conn = next(get_db()).connection()
+            self.cur = self.conn.connection.cursor()
             self.cur.execute(
                 sql, (item["dataDI"], item["indiceDI"])
             )
             self.conn.commit()
+            self.cur.close()
         yield item
