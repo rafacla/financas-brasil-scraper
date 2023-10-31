@@ -40,7 +40,7 @@ class FundosScraperPipeline(FilesPipeline):
         return file_name
 
     def item_completed(self, results, item, info):
-        if hasattr(item, 'pipeline') and item['pipeline'] == 'meses':
+        if item.get('pipeline',0) == 'meses':
             file_paths = [x['path'] for ok, x in results if ok]
             if not file_paths:
                 raise DropItem("Item contains no files")
@@ -95,7 +95,7 @@ class FundosScraperPipelineLaminas(FilesPipeline):
         return file_name
 
     def item_completed(self, results, item, info):
-        if hasattr(item, 'pipeline') and item['pipeline'] == 'laminas':
+        if item.get('pipeline',0) == 'laminas':
             file_paths = [x['path'] for ok, x in results if ok]
             if not file_paths:
                 raise DropItem("Item contains no files")
@@ -152,7 +152,7 @@ class FundosScraperPipelineTesouroDireto(FilesPipeline):
         return file_name
 
     def item_completed(self, results, item, info):
-        if hasattr(item, 'pipeline') and item['pipeline'] == 'tesouro':
+        if item.get('pipeline',0) == 'tesouro':
             file_paths = [x['path'] for ok, x in results if ok]
             if not file_paths:
                 raise DropItem("Item contains no files")
